@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>E-Commerce Business Report</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  <script src="https://unpkg.com/recharts@2.15.0/umd/Recharts.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            dark: {
+              bg: '#090A14',
+              card: '#111222',
+              border: '#1A1D35',
+              input: '#0D0F1E',
+            },
+            primary: '#DF6B33',
+            primaryHover: '#C85B28',
+          },
+          fontFamily: {
+            heading: ['Poppins', 'sans-serif'],
+            body: ['Inter', 'sans-serif'],
+          },
+        },
+      },
+    }
+  </script>
+  <style>
+    body {
+      background-color: #090A14;
+      color: #E2E4F0;
+      font-family: 'Inter', sans-serif;
+    }
+    .font-heading { font-family: 'Poppins', sans-serif; }
+    .orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: 0.06;
+    }
+    .card-glow {
+      box-shadow: 0 0 40px rgba(223, 107, 51, 0.03), 0 12px 32px rgba(0,0,0,0.3);
+    }
+    .kpi-card {
+      transition: all 0.2s ease;
+    }
+    .kpi-card:hover {
+      border-color: #2A2E4A;
+      transform: translateY(-2px);
+    }
+    /* Recharts overrides */
+    .recharts-cartesian-axis-tick-value { fill: #6B7280 !important; font-family: 'Inter', sans-serif; font-size: 12px; }
+    .recharts-legend-item-text { color: #9CA3AF !important; font-family: 'Inter', sans-serif; font-size: 12px; }
+    .recharts-tooltip-wrapper { outline: none; }
+    .recharts-default-tooltip {
+      background-color: #1A1D35 !important;
+      border: 1px solid #2A2E4A !important;
+      border-radius: 10px !important;
+      font-family: 'Inter', sans-serif !important;
+    }
+    .recharts-default-tooltip .recharts-tooltip-label { color: #E2E4F0 !important; font-weight: 600; }
+    .recharts-default-tooltip ul li { color: #9CA3AF !important; }
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #0D0F1E; }
+    ::-webkit-scrollbar-thumb { background: #1A1D35; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #2A2E4A; }
+    .table-scroll { overflow-x: auto; }
+    .trend-up { color: #22C55E; }
+    .trend-down { color: #EF4444; }
+    .badge-green { background: rgba(34,197,94,0.1); color: #22C55E; }
+    .badge-red { background: rgba(239,68,68,0.1); color: #EF4444; }
+    .badge-orange { background: rgba(223,107,51,0.1); color: #DF6B33; }
+    .badge-blue { background: rgba(59,130,246,0.1); color: #60A5FA; }
+    .badge-purple { background: rgba(168,85,247,0.1); color: #C084FC; }
+  </style>
+</head>
+<body class="min-h-screen relative overflow-x-hidden">
+
+  <!-- Background orbs -->
+  <div class="orb w-[500px] h-[500px] bg-primary top-0 right-0"></div>
+  <div class="orb w-[400px] h-[400px] bg-primary bottom-[200px] left-0"></div>
+
+  <div class="relative z-10">
+    <!-- Header -->
+    <header class="border-b border-dark-border px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between sticky top-0 bg-dark-bg/80 backdrop-blur-md z-50">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center">
+          <i data-lucide="bar-chart-3" class="w-5 h-5 text-primary"></i>
+        </div>
+        <div>
+          <h1 class="font-heading font-bold text-lg text-white leading-tight">Business Report</h1>
+          <p class="text-xs text-gray-500 leading-tight">E-Commerce Analytics Dashboard</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-3">
+        <div class="hidden sm:flex items-center gap-1.5 text-xs text-gray-500 border border-dark-border rounded-lg px-3 py-2 bg-dark-input">
+          <i data-lucide="calendar" class="w-3.5 h-3.5"></i>
+          <span>Jan 2025 – Dec 2025</span>
+        </div>
+        <button class="flex items-center gap-2 bg-primary text-white text-xs font-semibold px-4 py-2 rounded-lg hover:bg-primaryHover transition-colors">
+          <i data-lucide="download" class="w-3.5 h-3.5"></i>
+          <span class="hidden sm:inline">Export</span>
+        </button>
+      </div>
+    </header>
+
+    <main class="px-4 sm:px-6 lg:px-8 py-6 max-w-[1400px] mx-auto space-y-6">
+
+      <!-- KPI Cards -->
+      <section>
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+          <!-- Revenue -->
+          <div class="kpi-card bg-dark-card rounded-2xl border border-dark-border p-4 sm:p-5">
+            <div class="flex items-start justify-between mb-3">
+              <div class="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
+                <i data-lucide="dollar-sign" class="w-4.5 h-4.5 text-primary"></i>
+              </div>
+              <span class="flex items-center gap-0.5 text-xs font-medium trend-up">
+                <i data-lucide="trending-up" class="w-3 h-3"></i> +18.2%
+              </span>
+            </div>
+            <p class="text-xl sm:text-2xl font-heading font-bold text-white mb-0.5">$2,847,350</p>
+            <p class="text-xs text-gray-500">Total Revenue</p>
+          </div>
+          <!-- Orders -->
+          <div class="kpi-card bg-dark-card rounded-2xl border border-dark-border p-4 sm:p-5">
+            <div class="flex items-start justify-between mb-3">
+              <div class="w-9 h-9 rounded-xl bg-blue-500/10 flex items-center justify-center">
+                <i data-lucide="shopping-cart" class="w-4.5 h-4.5 text-blue-400"></i>
+              </div>
+              <span class="flex items-center gap-0.5 text-xs font-medium trend-up">
+                <i data-lucide="trending-up" class="w-3 h-3"></i> +12.5%
+              </span>
+            </div>
+            <p class="text-xl sm:text-2xl font-heading font-bold text-white mb-0.5">48,392</p>
+            <p class="text-xs text-gray-500">Total Orders</p>
+          </div>
+          <!-- Customers -->
+          <div class="kpi-card bg-dark-card rounded-2xl border border-dark-border p-4 sm:p-5">
+            <div class="flex items-start justify-between mb-3">
+              <div class="w-9 h-9 rounded-xl bg-green-500/10 flex items-center justify-center">
+                <i data-lucide="users" class="w-4.5 h-4.5 text-green-400"></i>
+              </div>
+              <span class="flex items-center gap-0.5 text-xs font-medium trend-up">
+                <i data-lucide="trending-up" class="w-3 h-3"></i> +24.8%
+              </span>
+            </div>
+            <p class="text-xl sm:text-2xl font-heading font-bold text-white mb-0.5">18,274</p>
+            <p class="text-xs text-gray-500">Active Customers</p>
+          </div>
+          <!-- Conversion Rate -->
+          <div class="kpi-card bg-dark-card rounded-2xl border border-dark-border p-4 sm:p-5">
+            <div class="flex items-start justify-between mb-3">
+              <div class="w-9 h-9 rounded-xl bg-purple-500/10 flex items-center justify-center">
+                <i data-lucide="percent" class="w-4.5 h-4.5 text-purple-400"></i>
+              </div>
+              <span class="flex items-center gap-0.5 text-xs font-medium trend-down">
+                <i data-lucide="trending-down" class="w-3 h-3"></i> -2.1%
+              </span>
+            </div>
+            <p class="text-xl sm:text-2xl font-heading font-bold text-white mb-0.5">3.74%</p>
+            <p class="text-xs text-gray-500">Conversion Rate</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Charts Row 1 -->
+      <section class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+
+        <!-- Revenue Trend -->
+        <div class="lg:col-span-2 bg-dark-card rounded-2xl border border-dark-border p-4 sm:p-6 card-glow">
+          <div class="flex items-center justify-between mb-5">
+            <div>
+              <h2 class="font-heading font-bold text-base text-white">Revenue Trend</h2>
+              <p class="text-xs text-gray-500 mt-0.5">Monthly revenue over the past 12 months</p>
+            </div>
+            <div class="flex gap-1.5">
+              <button class="text-xs px-3 py-1.5 rounded-lg bg-primary/10 text-primary border border-primary/20 font-medium">Revenue</button>
+              <button class="text-xs px-3 py-1.5 rounded-lg bg-dark-input text-gray-500 border border-dark-border font-medium">Orders</button>
+            </div>
+          </div>
+          <div class="h-[260px] sm:h-[300px]">
+            <Recharts.LineChart width={typeof window !== 'undefined' ? document.querySelector('.revenue-chart-container')?.offsetWidth || 600 : 600} height={280} data={revenueData}>
+              <Recharts.CartesianGrid strokeDasharray="3 3" stroke="#1A1D35" vertical={false} />
+              <Recharts.XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: '#6B7280', fontSize: 12 }} dy={10} />
+              <Recharts.YAxis axisLine={false} tickLine={false} tick={{ fill: '#6B7280', fontSize: 12 }} tickFormatter={(v) => '$' + (v/1000) + 'k'} dx={-10} />
+              <Recharts.Tooltip
+                contentStyle={{ background: '#1A1D35', border: '1px solid #2A2E4A', borderRadius: 10, fontFamily: 'Inter' }}
+                labelStyle={{ color: '#E2E4F0', fontWeight: 600 }}
+                formatter={(value) => ['$' + value.toLocaleString(), 'Revenue']}
+              />
+              <Recharts.Line type="monotone" dataKey="revenue" stroke="#DF6B33" strokeWidth={2.5} dot={{ r: 3, fill: '#DF6B33', strokeWidth: 0 }} activeDot={{ r: 5, fill: '#DF6B33' }} />
+              <Recharts.Line type="monotone" dataKey="orders" stroke="#60A5FA" strokeWidth={2} strokeDasharray="5 5" dot={false} />
+            </Recharts.LineChart>
+          </div>
+        </div>
+
+        <!-- Traffic Sources -->
+        <div class="bg-dark-card rounded-2xl border border-dark-border p-4 sm:p-6 card-glow">
+          <div class="mb-5">
+            <h2 class="font-heading font-bold text-base text-white">Traffic Sources</h2>
+            <p class="text-xs text-gray-500 mt-0.5">Distribution of visitors by channel</p>
+          </div>
+          <div class="flex items-center justify-center">
+            <Recharts.PieChart width={220} height={220}>
+              <Recharts.Pie
+                data={trafficData}
+                cx="50%"
+                cy="50%"
+                innerRadius={65}
+                outerRadius={95}
+                paddingAngle={3}
+                dataKey="value"
+              >
+                <Recharts.Cell fill="#DF6B33" />
+                <Recharts.Cell fill="#60A5FA" />
+                <Recharts.Cell fill="#22C55E" />
+                <Recharts.Cell fill="#C084FC" />
+                <Recharts.Cell fill="#FBBF24" />
+              </Recharts.Pie>
+              <Recharts.Tooltip
+                contentStyle={{ background: '#1A1D35', border: '1px solid #2A2E4A', borderRadius: 10, fontFamily: 'Inter' }}
+                formatter={(value, name) => [value + '%', name]}
+              />
+              <Recharts.Legend iconType="circle" iconSize={8} wrapperStyle={{ paddingTop: '10px', fontFamily: 'Inter', fontSize: '12px' }} />
+            </Recharts.PieChart>
+          </div>
+        </div>
+      </section>
+
+      <!-- Charts Row 2 -->
+      <section class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+
+        <!-- Sales by Category -->
+        <div class="bg-dark-card rounded-2xl border border-dark-border p-4 sm:p-6 card-glow">
+          <div class="flex items-center justify-between mb-5">
+            <div>
+              <h2 class="font-heading font-bold text-base text-white">Sales by Category</h2>
+              <p class="text-xs text-gray-500 mt-0.5">Revenue breakdown by product category</p>
+            </div>
+            <div class="badge-orange text-xs px-2.5 py-1 rounded-lg font-medium">YTD</div>
+          </div>
+          <div class="h-[260px] sm:h-[280px]">
+            <Recharts.BarChart width={500} height={260} data={categoryData} barCategoryGap="30%">
+              <Recharts.CartesianGrid strokeDasharray="3 3" stroke="#1A1D35" vertical={false} />
+              <Recharts.XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#6B7280', fontSize: 11 }} dy={10} />
+              <Recharts.YAxis axisLine={false} tickLine={false} tick={{ fill: '#6B7280', fontSize: 12 }} tickFormatter={(v) => '$' + (v/1000) + 'k'} dx={-10} />
+              <Recharts.Tooltip
+                contentStyle={{ background: '#1A1D35', border: '1px solid #2A2E4A', borderRadius: 10, fontFamily: 'Inter' }}
+                formatter={(value) => ['$' + value.toLocaleString(), 'Revenue']}
+              />
+              <Recharts.Bar dataKey="revenue" fill="#DF6B33" radius={[4, 4, 0, 0]} />
+              <Recharts.Bar dataKey="previous" fill="#1A1D35" radius={[4, 4, 0, 0]} />
+            </Recharts.BarChart>
+          </div>
+          <p class="text-center text-xs text-gray-600 mt-2">
+            <span class="inline-block w-3 h-2 rounded-sm bg-primary mr-1.5 align-middle"></span>2025
+            <span class="inline-block w-3 h-2 rounded-sm bg-dark-border ml-4 mr-1.5 align-middle"></span>2024
+          </p>
+        </div>
+
+        <!-- Customer Growth -->
+        <div class="bg-dark-card rounded-2xl border border-dark-border p-4 sm:p-6 card-glow">
+          <div class="flex items-center justify-between mb-5">
+            <div>
+              <h2 class="font-heading font-bold text-base text-white">Customer Growth</h2>
+              <p class="text-xs text-gray-500 mt-0.5">New vs returning customers per month</p>
+            </div>
+          </div>
+          <div class="h-[260px] sm:h-[280px]">
+            <Recharts.AreaChart width={500} height={260} data={customerData}>
+              <Recharts.defs>
+                <Recharts.linearGradient id="colorNew" x1="0" y1="0" x2="0" y2="1">
+                  <Recharts.stop offset="5%" stopColor="#DF6B33" stopOpacity={0.2}/>
+                  <Recharts.stop offset="95%" stopColor="#DF6B33" stopOpacity={0}/>
+                </Recharts.linearGradient>
+                <Recharts.linearGradient id="colorReturning" x1="0" y1="0" x2="0" y2="1">
+                  <Recharts.stop offset="5%" stopColor="#60A5FA" stopOpacity={0.2}/>
+                  <Recharts.stop offset="95%" stopColor="#60A5FA" stopOpacity={0}/>
+                </Recharts.linearGradient>
+              </Recharts.defs>
+              <Recharts.CartesianGrid strokeDasharray="3 3" stroke="#1A1D35" vertical={false} />
+              <Recharts.XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: '#6B7280', fontSize: 12 }} dy={10} />
+              <Recharts.YAxis axisLine={false} tickLine={false} tick={{ fill: '#6B7280', fontSize: 12 }} dx={-10} />
+              <Recharts.Tooltip
+                contentStyle={{ background: '#1A1D35', border: '1px solid #2A2E4A', borderRadius: 10, fontFamily: 'Inter' }}
+              />
+              <Recharts.Legend iconType="circle" iconSize={8} wrapperStyle={{ fontFamily: 'Inter', fontSize: '12px' }} />
+              <Recharts.Area type="monotone" dataKey="new" stroke="#DF6B33" strokeWidth={2} fillOpacity={1} fill="url(#colorNew)" />
+              <Recharts.Area type="monotone" dataKey="returning" stroke="#60A5FA" strokeWidth={2} fillOpacity={1} fill="url(#colorReturning)" />
+            </Recharts.AreaChart>
+          </div>
+        </div>
+      </section>
+
+      <!-- Tables Row -->
+      <section class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+
+        <!-- Top Products -->
+        <div class="bg-dark-card rounded-2xl border border-dark-border p-4 sm:p-6 card-glow">
+          <div class="flex items-center justify-between mb-4">
+            <div>
+              <h2 class="font-heading font-bold text-base text-white">Top Products</h2>
+              <p class="text-xs text-gray-500 mt-0.5">Best-selling products by revenue</p>
+            </div>
+            <a href="#" class="text-xs text-primary hover:text-primaryHover transition-colors font-medium">View all</a>
+          </div>
+          <div class="table-scroll">
+            <table class="w-full text-sm">
+              <thead>
+                <tr class="border-b border-dark-border">
+                  <th class="text-left py-2.5 px-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Product</th>
+                  <th class="text-right py-2.5 px-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Sales</th>
+                  <th class="text-right py-2.5 px-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Revenue</th>
+                  <th class="text-right py-2.5 px-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Trend</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="border-b border-dark-border/50 hover:bg-white/[0.02] transition-colors">
+                  <td class="py-3 px-2">
+                    <div class="flex items-center gap-2.5">
+                      <div class="w-8 h-8 rounded-lg bg-orange-500/10 flex items-center justify-center shrink-0">
+                        <i data-lucide="smartphone" class="w-4 h-4 text-primary"></i>
+                      </div>
+                      <div>
+                        <p class="text-gray-200 font-medium text-xs leading-tight">iPhone 15 Pro Max</p>
+                        <p class="text-gray-600 text-xs leading-tight">Electronics</p>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="py-3 px-2 text-right text-gray-300 text-xs">1,847</td>
+                  <td class="py-3 px-2 text-right text-white font-semibold text-xs">$1,847,000</td>
+                  <td class="py-3 px-2 text-right"><span class="badge-green text-xs px-1.5 py-0.5 rounded-md font-medium">+32%</span></td>
+                </tr>
+                <tr class="border-b border-dark-border/50 hover:bg-white/[0.02] transition-colors">
+                  <td class="py-3 px-2">
+                    <div class="flex items-center gap-2.5">
+                      <div class="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center shrink-0">
+                        <i data-lucide="laptop" class="w-4 h-4 text-blue-400"></i>
+                      </div>
+                      <div>
+                        <p class="text-gray-200 font-medium text-xs leading-tight">MacBook Air M3</p>
+                        <p class="text-gray-600 text-xs leading-tight">Electronics</p>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="py-3 px-2 text-right text-gray-300 text-xs">1,203</td>
+                  <td class="py-3 px-2 text-right text-white font-semibold text-xs">$1,442,803</td>
+                  <td class="py-3 px-2 text-right"><span class="badge-green text-xs px-1.5 py-0.5 rounded-md font-medium">+28%</span></td>
+                </tr>
+                <tr class="border-b border-dark-border/50 hover:bg-white/[0.02] transition-colors">
+                  <td class="py-3 px-2">
+                    <div class="flex items-center gap-2.5">
+                      <div class="w-8 h-8 rounded-lg bg-green-500/10 flex items-center justify-center shrink-0">
+                        <i data-lucide="watch" class="w-4 h-4 text-green-400"></i>
+                      </div>
+                      <div>
+                        <p class="text-gray-200 font-medium text-xs leading-tight">Apple Watch Series 9</p>
+                        <p class="text-gray-600 text-xs leading-tight">Wearables</p>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="py-3 px-2 text-right text-gray-300 text-xs">2,156</td>
+                  <td class="py-3 px-2 text-right text-white font-semibold text-xs">$863,244</td>
+                  <td class="py-3 px-2 text-right"><span class="badge-green text-xs px-1.5 py-0.5 rounded-md font-medium">+15%</span></td>
+                </tr>
+                <tr class="border-b border-dark-border/50 hover:bg-white/[0.02] transition-colors">
+                  <td class="py-3 px-2">
+                    <div class="flex items-center gap-2.5">
+                      <div class="w-8 h-8 rounded-lg bg-purple-500/10 flex items-center justify-center shrink-0">
+                        <i data-lucide="headphones" class="w-4 h-4 text-purple-400"></i>
+                      </div>
+                      <div>
+                        <p class="text-gray-200 font-medium text-xs leading-tight">Sony WH-1000XM5</p>
+                        <p class="text-gray-600 text-xs leading-tight">Audio</p>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="py-3 px-2 text-right text-gray-300 text-xs">984</td>
+                  <td class="py-3 px-2 text-right text-white font-semibold text-xs">$492,000</td>
+                  <td class="py-3 px-2 text-right"><span class="badge-red text-xs px-1.5 py-0.5 rounded-md font-medium">-8%</span></td>
+                </tr>
+                <tr class="hover:bg-white/[0.02] transition-colors">
+                  <td class="py-3 px-2">
+                    <div class="flex items-center gap-2.5">
+                      <div class="w-8 h-8 rounded-lg bg-yellow-500/10 flex items-center justify-center shrink-0">
+                        <i data-lucide="gamepad-2" class="w-4 h-4 text-yellow-400"></i>
+                      </div>
+                      <div>
+                        <p class="text-gray-200 font-medium text-xs leading-tight">PlayStation 5</p>
+                        <p class="text-gray-600 text-xs leading-tight">Gaming</p>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="py-3 px-2 text-right text-gray-300 text-xs">627</td>
+                  <td class="py-3 px-2 text-right text-white font-semibold text-xs">$439,077</td>
+                  <td class="py-3 px-2 text-right"><span class="badge-green text-xs px-1.5 py-0.5 rounded-md font-medium">+41%</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Recent Orders -->
+        <div class="bg-dark-card rounded-2xl border border-dark-border p-4 sm:p-6 card-glow">
+          <div class="flex items-center justify-between mb-4">
+            <div>
+              <h2 class="font-heading font-bold text-base text-white">Recent Orders</h2>
+              <p class="text-xs text-gray-500 mt-0.5">Latest customer transactions</p>
+            </div>
+            <a href="#" class="text-xs text-primary hover:text-primaryHover transition-colors font-medium">View all</a>
+          </div>
+          <div class="table-scroll">
+            <table class="w-full text-sm">
+              <thead>
+                <tr class="border-b border-dark-border">
+                  <th class="text-left py-2.5 px-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Order ID</th>
+                  <th class="text-left py-2.5 px-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Customer</th>
+                  <th class="text-left py-2.5 px-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
+                  <th class="text-right py-2.5 px-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="border-b border-dark-border/50 hover:bg-white/[0.02] transition-colors">
+                  <td class="py-3 px-2 text-gray-400 text-xs font-mono">#ORD-2025-4821</td>
+                  <td class="py-3 px-2 text-gray-200 text-xs">Sarah Mitchell</td>
+                  <td class="py-3 px-2"><span class="badge-green text-xs px-2 py-0.5 rounded-md font-medium">Delivered</span></td>
+                  <td class="py-3 px-2 text-right text-white font-semibold text-xs">$1,299</td>
+                </tr>
+                <tr class="border-b border-dark-border/50 hover:bg-white/[0.02] transition-colors">
+                  <td class="py-3 px-2 text-gray-400 text-xs font-mono">#ORD-2025-4820</td>
+                  <td class="py-3 px-2 text-gray-200 text-xs">James Wilson</td>
+                  <td class="py-3 px-2"><span class="badge-orange text-xs px-2 py-0.5 rounded-md font-medium">Processing</span></td>
+                  <td class="py-3 px-2 text-right text-white font-semibold text-xs">$849</td>
+                </tr>
+                <tr class="border-b border-dark-border/50 hover:bg-white/[0.02] transition-colors">
+                  <td class="py-3 px-2 text-gray-400 text-xs font-mono">#ORD-2025-4819</td>
+                  <td class="py-3 px-2 text-gray-200 text-xs">Emily Chen</td>
+                  <td class="py-3 px-2"><span class="badge-blue text-xs px-2 py-0.5 rounded-md font-medium">Shipped</span></td>
+                  <td class="py-3 px-2 text-right text-white font-semibold text-xs">$2,199</td>
+                </tr>
+                <tr class="border-b border-dark-border/50 hover:bg-white/[0.02] transition-colors">
+                  <td class="py-3 px-2 text-gray-400 text-xs font-mono">#ORD-2025-4818</td>
+                  <td class="py-3 px-2 text-gray-200 text-xs">Michael Brown</td>
+                  <td class="py-3 px-2"><span class="badge-green text-xs px-2 py-0.5 rounded-md font-medium">Delivered</span></td>
+                  <td class="py-3 px-2 text-right text-white font-semibold text-xs">$349</td>
+                </tr>
+                <tr class="border-b border-dark-border/50 hover:bg-white/[0.02] transition-colors">
+                  <td class="py-3 px-2 text-gray-400 text-xs font-mono">#ORD-2025-4817</td>
+                  <td class="py-3 px-2 text-gray-200 text-xs">Lisa Anderson</td>
+                  <td class="py-3 px-2"><span class="badge-purple text-xs px-2 py-0.5 rounded-md font-medium">Pending</span></td>
+                  <td class="py-3 px-2 text-right text-white font-semibold text-xs">$579</td>
+                </tr>
+                <tr class="hover:bg-white/[0.02] transition-colors">
+                  <td class="py-3 px-2 text-gray-400 text-xs font-mono">#ORD-2025-4816</td>
+                  <td class="py-3 px-2 text-gray-200 text-xs">David Kim</td>
+                  <td class="py-3 px-2"><span class="badge-red text-xs px-2 py-0.5 rounded-md font-medium">Cancelled</span></td>
+                  <td class="py-3 px-2 text-right text-white font-semibold text-xs">$199</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- Monthly Comparison Table -->
+      <section class="bg-dark-card rounded-2xl border border-dark-border p-4 sm:p-6 card-glow">
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <h2 class="font-heading font-bold text-base text-white">Monthly Performance Comparison</h2>
+            <p class="text-xs text-gray-500 mt-0.5">Year-over-year comparison of key metrics</p>
+          </div>
+        </div>
+        <div class="table-scroll">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="border-b border-dark-border">
+                <th class="text-left py-2.5 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Month</th>
+                <th class="text-right py-2.5 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Revenue 2025</th>
+                <th class="text-right py-2.5 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Revenue 2024</th>
+                <th class="text-right py-2.5 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Growth</th>
+                <th class="text-right py-2.5 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Orders 2025</th>
+                <th class="text-right py-2.5 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Orders 2024</th>
+                <th class="text-right py-2.5 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Growth</th>
+                <th class="text-right py-2.5 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">AOV 2025</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="border-b border-dark-border/50 hover:bg-white/[0.02] transition-colors">
+                <td class="py-3 px-3 text-gray-300 text-xs font-medium">Jan</td>
+                <td class="py-3 px-3 text-right text-white text-xs">$178,420</td>
+                <td class="py-3 px-3 text-right text-gray-500 text-xs">$142,800</td>
+                <td class="py-3 px-3 text-right"><span class="badge-green text-xs px-1.5 py-0.5 rounded-md font-medium">+24.9%</span></td>
+                <td class="py-3 px-3 text-right text-gray-300 text-xs">3,214</td>
+                <td class="py-3 px-3 text-right text-gray-500 text-xs">2,710</td>
+                <td class="py-3 px-3 text-right"><span class="badge-green text-xs px-1.5 py-0.5 rounded-md font-medium">+18.6%</span></td>
+                <td class="py-3 px-3 text-right text-white text-xs font-medium">$55.52</td>
+              </tr>
+              <tr class="border-b border-dark-border/50 hover:bg-white/[0.02] transition-colors">
+                <td class="py-3 px-3 text-gray-300 text-xs font-medium">Feb</td>
+                <td class="py-3 px-3 text-right text-white text-xs">$162,380</td>
+                <td class="py-3 px-3 text-right text-gray-500 text-xs">$138,200</td>
+                <td class="py-3 px-3 text-right"><span class="badge-green text-xs px-1.5 py-0.5 rounded-md font-medium">+17.5%</span></td>
+                <td class="py-3 px-3 text-right text-gray-300 text-xs">2,987</td>
+                <td class="py-3 px-3 text-right text-gray-500 text-xs">2,540</td>
+                <td class="py-3 px-3 text-right"><span class="badge-green text-xs px-1.5 py-0.5 rounded-md font-medium">+17.6%</span></td>
+                <td class="py-3 px-3 text-right text-white text-xs font-medium">$54.36</td>
+              </tr>
+              <tr class="border-b border-dark-border/50 hover:bg-white/[0.02] transition-colors">
+                <td class="py-3 px-3 text-gray-300 text-xs font-medium">Mar</td>
+                <td class="py-3 px-3 text-right text-white text-xs">$201,540</td>
+                <td class="py-3 px-3 text-right text-gray-500 text-xs">$168,900</td>
+                <td class="py-3 px-3 text-right"><span class="badge-green text-xs px-1.5 py-0.5 rounded-md font-medium">+19.3%</span></td>
+                <td class="py-3 px-3 text-right text-gray-300 text-xs">3,648</td>
+                <td class="py-3 px-3 text-right text-gray-500 text-xs">3,125</td>
+                <td class="py-3 px-3 text-right"><span class="badge-green text-xs px-1.5 py-0.5 rounded-md font-medium">+16.7%</span></td>
+                <td class="py-3 px-3 text-right text-white text-xs font-medium">$55.24</td>
+              </tr>
+              <tr class="border-b border-dark-border/50 hover:bg-white/[0.02] transition-colors">
+                <td class="py-3 px-3 text-gray-300 text-xs font-medium">Apr</td>
+                <td class="py-3 px-3 text-right text-white text-xs">$189,720</td>
+                <td class="py-3 px-3 text-right text-gray-500 text-xs">$159,400</td>
+                <td class="py-3 px-3 text-right"><span class="badge-green text-xs px-1.5 py-0.5 rounded-md font-medium">+19.0%</span></td>
+                <td class="py-3 px-3 text-right text-gray-300 text-xs">3,421</td>
+                <td class="py-3 px-3 text-right text-gray-500 text-xs">2,980</td>
+                <td class="py-3 px-3 text-right"><span class="badge-green text-xs px-1.5 py-0.5 rounded-md font-medium">+14.8%</span></td>
+                <td class="py-3 px-3 text-right text-white text-xs font-medium">$55.46</td>
+              </tr>
+              <tr class="border-b border-dark-border/50 hover:bg-white/[0.02] transition-colors">
+                <td class="py-3 px-3 text-gray-300 text-xs font-medium">May</td>
+                <td class="py-3 px-3 text-right text-white text-xs">$215,830</td>
+                <td class="py-3 px-3 text-right text-gray-500 text-xs">$178,500</td>
+                <td class="py-3 px-3 text-right"><span class="badge-green text-xs px-1.5 py-0.5 rounded-md font-medium">+20.9%</span></td>
+                <td class="py-3 px-3 text-right text-gray-300 text-xs">3,852</td>
+                <td class="py-3 px-3 text-right text-gray-500 text-xs">3,295</td>
+                <td class="py-3 px-3 text-right"><span class="badge-green text-xs px-1.5 py-0.5 rounded-md font-medium">+16.9%</span></td>
+                <td class="py-3 px-3 text-right text-white text-xs font-medium">$56.03</td>
+              </tr>
+              <tr class="border-b border-dark-border/50 hover:bg-white/[0.02] transition-colors">
+                <td class="py-3 px-3 text-gray-300 text-xs font-medium">Jun</td>
+                <td class="py-3 px-3 text-right text-white text-xs">$238,150</td>
+                <td class="py-3 px-3 text-right text-gray-500 text-xs">$195,600</td>
+                <td class="py-3 px-3 text-right"><span class="badge-green text-xs px-1.5 py-0.5 rounded-md font-medium">+21.8%</span></td>
+                <td class="py-3 px-3 text-right text-gray-300 text-xs">4,187</td>
+                <td class="py-3 px-3 text-right text-gray-500 text-xs">3,542</td>
+                <td class="py-3 px-3 text-right"><span class="badge-green text-xs px-1.5 py-0.5 rounded-md font-medium">+18.2%</span></td>
+                <td class="py-3 px-3 text-right text-white text-xs font-medium">$56.88</td>
+              </tr>
+              <tr class="border-b border-dark-border/50 hover:bg-white/[0.02] transition-colors">
+                <td class="py-3 px-3 text-gray-300 text-xs font-medium">Jul</td>
+                <td class="py-3 px-3 text-right text-white text-xs">$252,480</td>
+                <td class="py-3 px-3 text-right text-gray-500 text-xs">$210,800</td>
+                <td class="py-3 px-3 text-right"><span class="badge-green text-xs px-1.5 py-0.5 rounded-md font-medium">+19.8%</span></td>
+                <td class="py-3 px-3 text-right text-gray-300 text-xs">4,412</td>
+                <td class="py-3 px-3 text-right text-gray-500 text-xs">3,785</td>
+                <td class="py-3 px-3 text-right"><span class="badge-green text-xs px-1.5 py-0.5 rounded-md font-medium">+16.6%</span></td>
+                <td class="py-3 px-3 text-right text-white text-xs font-medium">$57.23</td>
+              </tr>
+              <tr class="border-b border-dark-border/50 hover:bg-white/[0.02] transition-colors">
+                <td class="py-3 px-3 text-gray-300 text-xs font-medium">Aug</td>
+                <td class="py-3 px-3 text-right text-white text-xs">$261,920</td>
+                <td class="py-3 px-3 text-right text-gray-500 text-xs">$218,400</td>
+                <td class="py-3 px-3 text-right"><span class="badge-green text-xs px-1.5 py-0.5 rounded-md font-medium">+19.9%</span></td>
+                <td class="py-3 px-3 text-right text-gray-300 text-xs">4,528</td>
+                <td class="py-3 px-3 text-right text-gray-500 text-xs">3,920</td>
+                <td class="py-3 px-3 text-right"><span class="badge-green text-xs px-1.5 py-0.5 rounded-md font-medium">+15.5%</span></td>
+                <td class="py-3 px-3 text-right text-white text-xs font-medium">$57.85</td>
+              </tr>
+              <tr class="border-b border-dark-border/50 hover:bg-white/[0.02] transition-colors">
+                <td class="py-3 px-3 text-gray-300 text-xs font-medium">Sep</td>
+                <td class="py-3 px-3 text-right text-white text-xs">$279,350</td>
+                <td class="py-3 px-3 text-right text-gray-500 text-xs">$228,900</td>
+                <td class="py-3 px-3 text-right"><span class="badge-green text-xs px-1.5 py-0.5 rounded-md font-medium">+22.0%</span></td>
+                <td class="py-3 px-3 text-right text-gray-300 text-xs">4,812</td>
+                <td class="py-3 px-3 text-right text-gray-500 text-xs">4,085</td>
+                <td class="py-3 px-3 text-right"><span class="badge-green text-xs px-1.5 py-0.5 rounded-md font-medium">+17.8%</span></td>
+                <td class="py-3 px-3 text-right text-white text-xs font-medium">$58.05</td>
+              </tr>
+              <tr class="border-b border-dark-border/50 hover:bg-white/[0.02] transition-colors">
+                <td class="py-3 px-3 text-gray-300 text-xs font-medium">Oct</td>
+                <td class="py-3 px-3 text-right text-white text-xs">$298,740</td>
+                <td class="py-3 px-3 text-right text-gray-500 text-xs">$242,100</td>
+                <td class="py-3 px-3 text-right"><span class="badge-green text-xs px-1.5 py-0.5 rounded-md font-medium">+23.4%</span></td>
+                <td class="py-3 px-3 text-right text-gray-300 text-xs">5,104</td>
+                <td class="py-3 px-3 text-right text-gray-500 text-xs">4,280</td>
+                <td class="py-3 px-3 text-right"><span class="badge-green text-xs px-1.5 py-0.5 rounded-md font-medium">+19.3%</span></td>
+                <td class="py-3 px-3 text-right text-white text-xs font-medium">$58.53</td>
+              </tr>
+              <tr class="border-b border-dark-border/50 hover:bg-white/[0.02] transition-colors">
+                <td class="py-3 px-3 text-gray-300 text-xs font-medium">Nov</td>
+                <td class="py-3 px-3 text-right text-white text-xs">$312,560</td>
+                <td class="py-3 px-3 text-right text-gray-500 text-xs">$258,700</td>
+                <td class="py-3 px-3 text-right"><span class="badge-green text-xs px-1.5 py-0.5 rounded-md font-medium">+20.8%</span></td>
+                <td class="py-3 px-3 text-right text-gray-300 text-xs">5,284</td>
+                <td class="py-3 px-3 text-right text-gray-500 text-xs">4,512</td>
+                <td class="py-3 px-3 text-right"><span class="badge-green text-xs px-1.5 py-0.5 rounded-md font-medium">+17.1%</span></td>
+                <td class="py-3 px-3 text-right text-white text-xs font-medium">$59.15</td>
+              </tr>
+              <tr class="hover:bg-white/[0.02] transition-colors">
+                <td class="py-3 px-3 text-gray-300 text-xs font-medium">Dec</td>
+                <td class="py-3 px-3 text-right text-white text-xs">$256,260</td>
+                <td class="py-3 px-3 text-right text-gray-500 text-xs">$215,600</td>
+                <td class="py-3 px-3 text-right"><span class="badge-green text-xs px-1.5 py-0.5 rounded-md font-medium">+18.9%</span></td>
+                <td class="py-3 px-3 text-right text-gray-300 text-xs">4,294</td>
+                <td class="py-3 px-3 text-right text-gray-500 text-xs">3,695</td>
+                <td class="py-3 px-3 text-right"><span class="badge-green text-xs px-1.5 py-0.5 rounded-md font-medium">+16.2%</span></td>
+                <td class="py-3 px-3 text-right text-white text-xs font-medium">$59.68</td>
+              </tr>
+            </tbody>
+            <tfoot>
+              <tr class="border-t-2 border-primary/30">
+                <td class="py-3 px-3 text-white text-xs font-heading font-bold">Total</td>
+                <td class="py-3 px-3 text-right text-primary font-bold text-xs font-heading">$2,847,350</td>
+                <td class="py-3 px-3 text-right text-gray-500 text-xs">$2,357,900</td>
+                <td class="py-3 px-3 text-right"><span class="badge-green text-xs px-1.5 py-0.5 rounded-md font-medium">+20.8%</span></td>
+                <td class="py-3 px-3 text-right text-white text-xs font-bold">48,392</td>
+                <td class="py-3 px-3 text-right text-gray-500 text-xs">41,469</td>
+                <td class="py-3 px-3 text-right"><span class="badge-green text-xs px-1.5 py-0.5 rounded-md font-medium">+16.7%</span></td>
+                <td class="py-3 px-3 text-right text-white text-xs font-bold">$58.84</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-dark-border px-4 sm:px-6 lg:px-8 py-4 mt-6">
+      <div class="flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-gray-600">
+        <p>E-Commerce Business Report — Generated April 2026</p>
+        <p>Data is simulated for demonstration purposes</p>
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    lucide.createIcons();
+
+    // Mock Data
+    const revenueData = [
+      { month: 'Jan', revenue: 178420, orders: 3214 },
+      { month: 'Feb', revenue: 162380, orders: 2987 },
+      { month: 'Mar', revenue: 201540, orders: 3648 },
+      { month: 'Apr', revenue: 189720, orders: 3421 },
+      { month: 'May', revenue: 215830, orders: 3852 },
+      { month: 'Jun', revenue: 238150, orders: 4187 },
+      { month: 'Jul', revenue: 252480, orders: 4412 },
+      { month: 'Aug', revenue: 261920, orders: 4528 },
+      { month: 'Sep', revenue: 279350, orders: 4812 },
+      { month: 'Oct', revenue: 298740, orders: 5104 },
+      { month: 'Nov', revenue: 312560, orders: 5284 },
+      { month: 'Dec', revenue: 256260, orders: 4294 },
+    ];
+
+    const trafficData = [
+      { name: 'Organic Search', value: 38 },
+      { name: 'Direct', value: 24 },
+      { name: 'Social Media', value: 19 },
+      { name: 'Referral', value: 12 },
+      { name: 'Email', value: 7 },
+    ];
+
+    const categoryData = [
+      { name: 'Electronics', revenue: 892450, previous: 742800 },
+      { name: 'Fashion', revenue: 541230, previous: 489100 },
+      { name: 'Home & Garden', revenue: 387640, previous: 351200 },
+      { name: 'Beauty', revenue: 296780, previous: 258900 },
+      { name: 'Sports', revenue: 248920, previous: 219600 },
+      { name: 'Books', revenue: 156430, previous: 143200 },
+      { name: 'Toys', revenue: 132880, previous: 118400 },
+      { name: 'Automotive', revenue: 191020, previous: 134700 },
+    ];
+
+    const customerData = [
+      { month: 'Jan', new: 842, returning: 1240 },
+      { month: 'Feb', new: 768, returning: 1198 },
+      { month: 'Mar', new: 1024, returning: 1480 },
+      { month: 'Apr', new: 968, returning: 1392 },
+      { month: 'May', new: 1158, returning: 1632 },
+      { month: 'Jun', new: 1284, returning: 1812 },
+      { month: 'Jul', new: 1342, returning: 1896 },
+      { month: 'Aug', new: 1418, returning: 1984 },
+      { month: 'Sep', new: 1528, returning: 2142 },
+      { month: 'Oct', new: 1684, returning: 2398 },
+      { month: 'Nov', new: 1782, returning: 2568 },
+      { month: 'Dec', new: 1476, returning: 2214 },
+    ];
+  </script>
+</body>
+</html>
