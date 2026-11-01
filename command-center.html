@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Hội Lão Command Center</title>
+<title>Ban điều hành AI Agents</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
@@ -51,6 +51,35 @@
   .dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); margin-right: 6px; vertical-align: 1px; box-shadow: 0 0 8px var(--accent); }
   .pill.live .dot { background: var(--red); box-shadow: 0 0 8px var(--red); animation: blink 1.2s infinite; }
   @keyframes blink { 50% { opacity: 0.3; } }
+
+  .pill.sim { border-color: rgba(245,197,66,0.45); background: rgba(245,197,66,0.08); color: var(--amber); font-weight: 700; }
+
+  /* Bàn làm việc Đại trưởng lão */
+  .dtl-card { border-color: rgba(245,197,66,0.35); }
+  .dtl-card .card-title .hi { color: var(--amber); }
+  .dtl-now { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px; background: rgba(245,197,66,0.07); border: 1px solid rgba(245,197,66,0.25); font-size: 13px; margin-bottom: 10px; }
+  .dtl-now .who { width: 30px; height: 30px; flex: none; border-radius: 50%; background: var(--amber); color: #05080a; display: grid; place-items: center; font-size: 10px; font-weight: 800; }
+  .dtl-now b { color: var(--amber); }
+  .dtl-stats { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 8px; margin-bottom: 10px; }
+  .dtl-stat { background: rgba(0,0,0,0.25); border: 1px solid var(--border); border-radius: 10px; padding: 8px 10px; }
+  .dtl-stat .v { font-size: 20px; font-weight: 800; font-variant-numeric: tabular-nums; }
+  .dtl-stat .l { font-size: 10px; color: var(--muted); }
+  .dtl-stat.warn .v { color: var(--amber); }
+  .dtl-grid { display: grid; grid-template-columns: minmax(0,1.35fr) minmax(0,1fr); gap: 10px; }
+  .dtl-list { background: rgba(0,0,0,0.25); border: 1px solid var(--border); border-radius: 10px; padding: 4px 10px; min-height: 240px; }
+  .dtl-item:last-child { border-bottom: none; }
+  .dtl-item { display: grid; grid-template-columns: 38px minmax(0,1fr) auto; gap: 6px; align-items: center; font-size: 12px; padding: 6px 0; border-bottom: 1px solid rgba(22,48,42,0.6); line-height: 1.35; }
+  .dtl-item.fresh { animation: pop .35s ease-out; }
+  .dtl-item time { color: var(--muted); font-family: var(--mono); font-size: 11px; }
+  .dtl-item b { color: var(--accent); }
+  .dtl-item .txt { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .badge { font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 999px; white-space: nowrap; }
+  .badge.pending { background: rgba(245,197,66,0.15); color: var(--amber); }
+  .badge.reviewing { background: var(--amber); color: #05080a; }
+  .badge.approved { background: var(--accent-dim); color: var(--accent); }
+  .badge.info { background: rgba(125,148,141,0.12); color: var(--muted); }
+  .approve { font: 700 10px var(--font); padding: 3px 9px; border-radius: 999px; border: 1px solid var(--amber); background: none; color: var(--amber); cursor: pointer; }
+  .approve:hover { background: var(--amber); color: #05080a; }
 
   /* Layout */
   .grid { display: grid; grid-template-columns: 280px minmax(0, 1fr) 330px; gap: 14px; }
@@ -163,6 +192,8 @@
     .board { grid-template-columns: repeat(2, minmax(0,1fr)); }
     .pills { margin-left: 0; }
     .kpi-value { font-size: 24px; }
+    .dtl-grid { grid-template-columns: minmax(0,1fr); }
+    .dtl-stats { grid-template-columns: repeat(2, minmax(0,1fr)); }
   }
 </style>
 </head>
@@ -170,13 +201,13 @@
 <div class="app">
   <header>
     <div>
-      <div class="logo">HỘI<span>LÃO</span></div>
-      <div class="subtitle">AI Command Center</div>
+      <div class="logo">Ban điều hành <span>AI Agents</span></div>
     </div>
     <div class="pills">
       <div class="pill"><span class="dot"></span><b id="h-running">–</b> lão đang chạy</div>
       <div class="pill">Việc trong hàng đợi: <b id="h-queue">0</b></div>
       <div class="pill">Chi phí AI hôm nay: <b id="h-cost">1,85 USD</b></div>
+      <div class="pill sim" title="Số liệu và hoạt động trên trang là giả lập, chưa nối với các lão thật">Chế độ mô phỏng</div>
       <div class="pill live"><span class="dot"></span>LIVE <span id="h-clock">--:--:--</span></div>
     </div>
   </header>
@@ -193,18 +224,8 @@
     <!-- CENTER: office + board + command -->
     <main class="col">
       <div class="card office">
-        <div class="card-title" style="padding:4px 4px 0">Văn phòng Hội Lão · Trực tiếp <span class="live-tag"><span class="dot"></span>LIVE</span></div>
+        <div class="card-title" style="padding:4px 4px 0">Văn phòng AI Agents · Trực tiếp <span class="live-tag"><span class="dot"></span>LIVE</span></div>
         <svg id="office" aria-label="Văn phòng các lão, nhìn chéo"></svg>
-      </div>
-
-      <div class="card">
-        <div class="card-title">Bảng công việc <span class="hi" id="campaign"></span></div>
-        <div class="board">
-          <div class="lane"><div class="lane-head">HÀNG ĐỢI <span id="c-queue">0</span></div><div id="l-queue"></div></div>
-          <div class="lane"><div class="lane-head">ĐANG LÀM <span id="c-doing">0</span></div><div id="l-doing"></div></div>
-          <div class="lane"><div class="lane-head">REVIEW <span id="c-review">0</span></div><div id="l-review"></div></div>
-          <div class="lane"><div class="lane-head">XONG <span id="c-done">0</span></div><div id="l-done"></div></div>
-        </div>
       </div>
 
       <div class="card" style="padding:10px">
@@ -220,6 +241,38 @@
           <button class="chip" type="button">Chấm công tháng 10</button>
         </div>
       </div>
+
+      <div class="card dtl-card">
+        <div class="card-title">Bàn làm việc Đại trưởng lão <span class="hi">ĐIỀU HÀNH</span></div>
+        <div class="dtl-now"><div class="who">ĐT</div><div id="dtl-now">Đang theo dõi các lão</div></div>
+        <div class="dtl-stats">
+          <div class="dtl-stat"><div class="v" id="ds-assigned">0</div><div class="l">Việc đã giao hôm nay</div></div>
+          <div class="dtl-stat"><div class="v" id="ds-reports">0</div><div class="l">Báo cáo đã nhận</div></div>
+          <div class="dtl-stat warn"><div class="v" id="ds-pending">0</div><div class="l">Chờ duyệt</div></div>
+          <div class="dtl-stat"><div class="v" id="ds-approved">0</div><div class="l">Đã duyệt</div></div>
+        </div>
+        <div class="dtl-grid">
+          <div>
+            <div class="card-title" style="margin-bottom:6px">Báo cáo các lão gửi lên</div>
+            <div class="dtl-list" id="dtl-inbox"></div>
+          </div>
+          <div>
+            <div class="card-title" style="margin-bottom:6px">Lệnh đã giao</div>
+            <div class="dtl-list" id="dtl-orders"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Bảng công việc <span class="hi" id="campaign"></span></div>
+        <div class="board">
+          <div class="lane"><div class="lane-head">HÀNG ĐỢI <span id="c-queue">0</span></div><div id="l-queue"></div></div>
+          <div class="lane"><div class="lane-head">ĐANG LÀM <span id="c-doing">0</span></div><div id="l-doing"></div></div>
+          <div class="lane"><div class="lane-head">REVIEW <span id="c-review">0</span></div><div id="l-review"></div></div>
+          <div class="lane"><div class="lane-head">XONG <span id="c-done">0</span></div><div id="l-done"></div></div>
+        </div>
+      </div>
+
     </main>
 
     <!-- RIGHT: KPIs, chart, feed -->
@@ -241,7 +294,7 @@
     </aside>
   </div>
 
-  <footer>Mô phỏng Hội Lão · dữ liệu giả lập</footer>
+  <footer>Ban điều hành AI Agents · đang chạy dữ liệu mô phỏng, chưa nối với các lão thật</footer>
 </div>
 
 <script>
@@ -429,6 +482,7 @@
   }
 
   // ---------- State ----------
+  const dtl = { assigned: 142, reports: 131, approved: 118, inbox: [], orders: [], current: null, ver: 0, nextId: 1 };
   const state = {
     tasks: [], nextId: 1, cost: 1.85,
     orders: 486, lots: 37, cty: 64, done: 1883,
@@ -476,7 +530,7 @@
     const ts = state.tasks.filter(t => t.agent === id);
     const doing = ts.find(t => t.status === 'doing');
     if (doing) return ['working', 'Đang làm', doing.title];
-    if (id === 'dtl') return ['working', 'Điều phối', byId[id].role];
+    if (id === 'dtl') return dtl.current ? ['working', 'Đang duyệt', `Duyệt: ${dtl.current.task ? dtl.current.task.title : dtl.current.text}`] : ['working', 'Điều phối', byId[id].role];
     const rev = ts.find(t => t.status === 'review');
     if (rev) return ['review', 'Chờ duyệt', rev.title];
     return ['', 'Trực', byId[id].role];
@@ -564,6 +618,67 @@
     const r = rowEls[id]; r.classList.add('flash'); setTimeout(() => r.classList.remove('flash'), 900);
   }
 
+  // ---------- Đại trưởng lão ----------
+  function report(from, text, task = null) {
+    dtl.inbox.unshift({ id: dtl.nextId++, time: hhmm(), from, text, task, status: task ? 'pending' : 'info', at: now() });
+    dtl.inbox = dtl.inbox.filter((r, i) => i < 30 || r.status === 'pending' || r.status === 'reviewing');
+    dtl.reports++; dtl.ver++;
+  }
+  function order(to, text) {
+    dtl.orders.unshift({ id: dtl.nextId++, time: hhmm(), to, text, at: now() });
+    dtl.orders.length = Math.min(dtl.orders.length, 20);
+    dtl.assigned++; dtl.ver++;
+  }
+  function approve(r) {
+    if (!r || r.status === 'approved') return;
+    r.status = 'approved';
+    if (r.task && r.task.status === 'review') { r.task.status = 'done'; r.task.since = now(); state.done++; }
+    if (dtl.current === r) dtl.current = null;
+    dtl.approved++; dtl.ver++;
+    log('dtl', r.from, `đã duyệt "${r.task ? r.task.title : r.text}"`);
+    arc('dtl', r.from, 'Duyệt ✓');
+  }
+  // Đại trưởng lão duyệt lần lượt từng báo cáo, mỗi báo cáo mất ~1,6 giây
+  function dtlWork() {
+    const t = now();
+    if (dtl.current && t - dtl.current.startedAt > 1600) approve(dtl.current);
+    if (!dtl.current) {
+      const next = dtl.inbox.filter(r => r.status === 'pending' && t - r.at > 800).pop();
+      if (next) { next.status = 'reviewing'; next.startedAt = t; dtl.current = next; dtl.ver++; }
+    }
+  }
+  let dtlSig = '';
+  function renderDtl() {
+    const pending = dtl.inbox.filter(r => r.status === 'pending' || r.status === 'reviewing').length;
+    const cur = dtl.current;
+    $('dtl-now').innerHTML = cur
+      ? `Đang duyệt báo cáo của <b>${byId[cur.from].name}</b>: ${cur.task ? cur.task.title : cur.text}`
+      : pending ? `Có <b>${pending}</b> báo cáo đang chờ, chuẩn bị duyệt` : `Đang theo dõi ${AGENTS.length - 1} lão, chưa có báo cáo mới`;
+    $('ds-assigned').textContent = fmt(dtl.assigned);
+    $('ds-reports').textContent = fmt(dtl.reports);
+    $('ds-pending').textContent = pending;
+    $('ds-approved').textContent = fmt(dtl.approved);
+    if (dtlSig === String(dtl.ver)) return;
+    dtlSig = String(dtl.ver);
+    const label = { pending: 'Chờ duyệt', reviewing: 'Đang duyệt', approved: 'Đã duyệt', info: 'Đã nhận' };
+    $('dtl-inbox').innerHTML = dtl.inbox.slice(0, 7).map(r => `
+      <div class="dtl-item ${now() - r.at < 1500 ? 'fresh' : ''}">
+        <time>${r.time}</time>
+        <div class="txt" title="${byId[r.from].name}: ${r.text}"><b>${byId[r.from].name}</b>: ${r.text}</div>
+        ${r.status === 'pending' ? `<button class="approve" data-id="${r.id}">Duyệt</button>` : `<span class="badge ${r.status}">${label[r.status]}</span>`}
+      </div>`).join('');
+    $('dtl-orders').innerHTML = dtl.orders.slice(0, 7).map(o => `
+      <div class="dtl-item ${now() - o.at < 1500 ? 'fresh' : ''}" style="grid-template-columns:38px minmax(0,1fr)">
+        <time>${o.time}</time>
+        <div class="txt" title="${byId[o.to].name}: ${o.text}">→ <b>${byId[o.to].name}</b>: ${o.text}</div>
+      </div>`).join('');
+  }
+  $('dtl-inbox').addEventListener('click', e => {
+    const b = e.target.closest('.approve'); if (!b) return;
+    approve(dtl.inbox.find(r => r.id === +b.dataset.id));
+    renderDtl(); renderBoard(); renderAgents();
+  });
+
   // ---------- Arcs ----------
   function arc(from, to, label) {
     const [x1, y1] = agentEls[from].head, [x2, y2] = agentEls[to].head;
@@ -597,23 +712,24 @@
       } else if (task.status === 'doing' && t - task.since > task.dur) {
         task.status = 'review'; task.since = t;
         log(task.agent, 'dtl', `xong "${task.title}", nhờ duyệt`);
-        arc(task.agent, 'dtl', 'Xong ✓');
-      } else if (task.status === 'review' && t - task.since > 3500) {
-        task.status = 'done'; task.since = t; state.done++;
+        arc(task.agent, 'dtl', 'Báo cáo');
+        report(task.agent, `Xong "${task.title}"`, task);
       }
     }
+    dtlWork();
     // trim old done tasks
     const done = state.tasks.filter(x => x.status === 'done').sort((a, b) => b.since - a.since);
     if (done.length > 12) {
       const drop = new Set(done.slice(12).filter(x => !state.campaign || x.campaign !== state.campaign.id).map(x => x.id));
       state.tasks = state.tasks.filter(x => !drop.has(x.id));
     }
-    renderBoard(); renderAgents(); renderKpis();
+    renderBoard(); renderAgents(); renderKpis(); renderDtl();
   }
 
   function ambient() {
     const [f, to, text, label] = pick(AMBIENT);
     log(f, to, text); arc(f, to, label);
+    if (to === 'dtl') report(f, text);
     if (f === 'l8' || f === 'l9') state.cty++;
     if (to === 'l2' || f === 'l2') state.lots += Math.random() < 0.4 ? 1 : 0;
   }
@@ -621,7 +737,9 @@
   function routine() {
     if (state.tasks.filter(t => t.status !== 'done').length > 14) return;
     const [title, agent] = pick(ROUTINE);
+    if (state.tasks.some(t => t.agent === agent && t.status !== 'done')) return;
     addTask(title, agent);
+    order(agent, `${title} (định kỳ)`);
   }
 
   function metrics() {
@@ -648,6 +766,8 @@
       setTimeout(() => {
         addTask(title, agent, 'queue', cid);
         log('dtl', agent, `việc mới: ${title.toLowerCase()}`);
+        order(agent, title);
+        renderDtl();
         arc('dtl', agent, 'Việc mới');
         renderBoard();
       }, 250 + i * 320);
@@ -667,6 +787,13 @@
   const clock = () => { $('h-clock').textContent = new Date().toTimeString().slice(0, 8); };
   clock(); setInterval(clock, 1000);
   for (let i = 0; i < 6; i++) { const [f, to, text] = AMBIENT[i]; log(f, to, text); }
+  for (const tk of state.tasks.filter(x => x.status === 'review')) report(tk.agent, `Xong "${tk.title}"`, tk);
+  report('l20', 'đã tạo TK chấm công cho 2 NV');
+  report('l9', 'đã tạo 6 đơn sapo Cty');
+  for (const tk of state.tasks.filter(x => x.status !== 'review')) order(tk.agent, tk.title);
+  for (const r of dtl.inbox) r.at = 0;
+  for (const o of dtl.orders) o.at = 0;
+  Object.assign(dtl, { assigned: 142, reports: 131, approved: 118 });
   renderSpark(); tick();
   setInterval(tick, 1000);
   setInterval(ambient, 2600);
