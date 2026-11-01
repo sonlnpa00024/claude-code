@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Command Center</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #05080a;
+    --panel: #0a1110;
+    --panel-2: #0d1715;
+    --border: #16302a;
+    --border-hi: #1f4a3f;
+    --text: #e6f2ee;
+    --muted: #7d948d;
+    --dim: #4a5f59;
+    --accent: #2ff59a;
+    --accent-dim: rgba(47, 245, 154, 0.14);
+    --amber: #f5c542;
+    --red: #ff4d5e;
+    --font: 'Be Vietnam Pro', system-ui, sans-serif;
+    --mono: 'JetBrains Mono', ui-monospace, monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: var(--bg); color: var(--text); font-family: var(--font); }
+  body {
+    min-height: 100vh;
+    background-image:
+      radial-gradient(ellipse at 50% -10%, rgba(47,245,154,0.08), transparent 55%),
+      linear-gradient(rgba(47,245,154,0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(47,245,154,0.025) 1px, transparent 1px);
+    background-size: 100% 100%, 32px 32px, 32px 32px;
+  }
+  .app { max-width: 1600px; margin: 0 auto; padding: 16px; }
+
+  /* Header */
+  header { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-bottom: 16px; }
+  .logo { font-weight: 800; font-size: 22px; letter-spacing: -0.5px; }
+  .logo span { color: var(--accent); }
+  .subtitle { font-size: 10px; letter-spacing: 3px; color: var(--muted); text-transform: uppercase; }
+  .pills { margin-left: auto; display: flex; gap: 8px; flex-wrap: wrap; }
+  .pill {
+    font-size: 12px; padding: 6px 12px; border-radius: 999px;
+    background: var(--panel); border: 1px solid var(--border); white-space: nowrap;
+  }
+  .pill b { color: var(--accent); font-weight: 700; }
+  .pill.live { border-color: rgba(255,77,94,0.5); background: rgba(255,77,94,0.08); font-family: var(--mono); }
+  .dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); margin-right: 6px; vertical-align: 1px; box-shadow: 0 0 8px var(--accent); }
+  .pill.live .dot { background: var(--red); box-shadow: 0 0 8px var(--red); animation: blink 1.2s infinite; }
+  @keyframes blink { 50% { opacity: 0.3; } }
+
+  /* Layout */
+  .grid { display: grid; grid-template-columns: 280px minmax(0, 1fr) 330px; gap: 14px; }
+  .col { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+  .card {
+    background: linear-gradient(180deg, var(--panel-2), var(--panel));
+    border: 1px solid var(--border); border-radius: 14px; padding: 14px;
+    box-shadow: 0 0 30px rgba(47,245,154,0.03), inset 0 1px 0 rgba(255,255,255,0.02);
+  }
+  .card-title {
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--muted);
+    margin-bottom: 12px;
+  }
+  .card-title .hi { color: var(--accent); }
+
+  /* Agent list */
+  .agent-row { display: grid; grid-template-columns: 30px 1fr auto; gap: 10px; align-items: center; padding: 7px 4px; border-radius: 8px; transition: background .3s; }
+  .agent-row.flash { background: var(--accent-dim); }
+  .avatar { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; font-size: 10px; font-weight: 800; color: #05080a; }
+  .agent-name { font-size: 13px; font-weight: 600; }
+  .agent-act { font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 140px; }
+  .status {
+    font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 999px; white-space: nowrap;
+    background: rgba(125,148,141,0.12); color: var(--muted);
+  }
+  .status.working { background: var(--accent); color: #05080a; box-shadow: 0 0 10px rgba(47,245,154,0.4); }
+  .status.review { background: rgba(245,197,66,0.15); color: var(--amber); }
+
+  /* Office */
+  .office { position: relative; padding: 10px 10px 0; }
+  .office svg { width: 100%; height: auto; display: block; }
+  .live-tag { color: var(--accent); font-weight: 700; }
+  .fig { transform-box: fill-box; }
+  .agent-g.working .fig { animation: bob 0.9s ease-in-out infinite; }
+  @keyframes bob { 50% { transform: translateY(-2px); } }
+  .ring { transition: opacity .3s; }
+  .agent-g.working .ring { animation: pulse 1.6s ease-in-out infinite; }
+  @keyframes pulse { 50% { opacity: 0.35; } }
+  .arc { fill: none; stroke: var(--accent); stroke-width: 2; stroke-dasharray: 6 6; animation: dash 0.6s linear infinite; filter: drop-shadow(0 0 4px rgba(47,245,154,0.7)); }
+  @keyframes dash { to { stroke-dashoffset: -12; } }
+  .arc-g { transition: opacity .5s; }
+  .bubble rect { fill: #0c2a1f; stroke: var(--accent); stroke-width: 1.2; }
+  .bubble text { fill: var(--accent); font: 700 11px var(--font); }
+  .room-label { font: 700 10px var(--font); letter-spacing: 2px; fill: rgba(200,255,230,0.55); text-transform: uppercase; }
+  .tag text { font: 700 9px var(--font); fill: #fff; }
+
+  /* Kanban */
+  .board { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 10px; }
+  .lane { background: rgba(0,0,0,0.25); border: 1px solid var(--border); border-radius: 10px; padding: 8px; min-height: 150px; }
+  .lane-head { display: flex; justify-content: space-between; font-size: 10px; letter-spacing: 1.5px; font-weight: 700; color: var(--muted); margin-bottom: 8px; padding: 0 2px; }
+  .task {
+    background: #0b1d18; border: 1px solid var(--border-hi); border-radius: 8px; padding: 7px 9px; margin-bottom: 6px;
+    animation: pop .35s ease-out;
+  }
+  .task.new { border-color: var(--accent); box-shadow: 0 0 12px rgba(47,245,154,0.25); }
+  .task-title { font-size: 12px; font-weight: 600; line-height: 1.3; }
+  .task-agent { font-size: 10px; color: var(--accent); margin-top: 2px; }
+  .more { font-size: 10px; color: var(--muted); text-align: center; padding-top: 2px; }
+  @keyframes pop { from { opacity: 0; transform: translateY(-4px); } }
+
+  /* Command */
+  .cmd { display: flex; gap: 10px; align-items: center; padding: 8px 8px 8px 16px; }
+  .cmd .prompt { color: var(--accent); font-family: var(--mono); font-weight: 600; }
+  .cmd input {
+    flex: 1; min-width: 0; background: transparent; border: none; outline: none; color: var(--text);
+    font: 500 16px var(--font);
+  }
+  .cmd input::placeholder { color: var(--dim); }
+  .cmd button {
+    background: var(--accent); color: #04140d; border: none; border-radius: 10px; padding: 11px 18px;
+    font: 800 14px var(--font); cursor: pointer; white-space: nowrap; box-shadow: 0 0 18px rgba(47,245,154,0.35);
+  }
+  .cmd button:hover { filter: brightness(1.08); }
+  .chips { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+  .chip { font-size: 11px; color: var(--muted); border: 1px dashed var(--border-hi); border-radius: 999px; padding: 4px 10px; cursor: pointer; background: none; font-family: var(--font); }
+  .chip:hover { color: var(--accent); border-color: var(--accent); }
+
+  /* KPIs */
+  .kpis { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .kpi { padding: 12px 14px; }
+  .kpi-label { font-size: 11px; color: var(--muted); }
+  .kpi-value { font-size: 28px; font-weight: 800; letter-spacing: -1px; margin: 2px 0; font-variant-numeric: tabular-nums; }
+  .kpi-sub { font-size: 11px; color: var(--accent); font-weight: 600; }
+  .chart svg { width: 100%; height: 130px; display: block; }
+
+  /* Feed */
+  .feed { max-height: 360px; overflow: hidden; }
+  .msg { display: grid; grid-template-columns: 38px 1fr; gap: 6px; font-size: 12px; padding: 7px 0; border-bottom: 1px solid rgba(22,48,42,0.6); line-height: 1.4; animation: pop .35s ease-out; }
+  .msg time { color: var(--muted); font-family: var(--mono); font-size: 11px; }
+  .msg b { color: var(--accent); font-weight: 700; }
+
+  footer { text-align: center; color: var(--dim); font-size: 11px; padding: 20px 0 8px; }
+
+  @media (max-width: 1200px) {
+    .grid { grid-template-columns: 240px minmax(0,1fr); }
+    .col.right { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1fr; }
+  }
+  @media (max-width: 760px) {
+    .app { padding: 12px; }
+    .grid { grid-template-columns: minmax(0,1fr); }
+    .col.left { order: 2; }
+    .col.right { order: 3; grid-template-columns: minmax(0,1fr); }
+    .board { grid-template-columns: repeat(2, minmax(0,1fr)); }
+    .pills { margin-left: 0; }
+    .kpi-value { font-size: 24px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div>
+      <div class="logo">AI<span>OFFICE</span></div>
+      <div class="subtitle">AI Command Center</div>
+    </div>
+    <div class="pills">
+      <div class="pill"><span class="dot"></span><b id="h-running">15/15</b> agent đang chạy</div>
+      <div class="pill">Việc trong hàng đợi: <b id="h-queue">0</b></div>
+      <div class="pill">Chi phí AI hôm nay: <b id="h-cost">1,85 USD</b></div>
+      <div class="pill live"><span class="dot"></span>LIVE <span id="h-clock">--:--:--</span></div>
+    </div>
+  </header>
+
+  <div class="grid">
+    <!-- LEFT: agents -->
+    <aside class="col left">
+      <div class="card">
+        <div class="card-title">Đội AI Agent <span class="hi" id="online-count">15/15 online</span></div>
+        <div id="agent-list"></div>
+      </div>
+    </aside>
+
+    <!-- CENTER: office + board + command -->
+    <main class="col">
+      <div class="card office">
+        <div class="card-title" style="padding:4px 4px 0">Văn phòng AI · Trực tiếp <span class="live-tag"><span class="dot"></span>LIVE</span></div>
+        <svg id="office" viewBox="-285 -45 570 370" aria-label="Văn phòng AI isometric"></svg>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Bảng công việc <span class="hi" id="campaign"></span></div>
+        <div class="board">
+          <div class="lane"><div class="lane-head">HÀNG ĐỢI <span id="c-queue">0</span></div><div id="l-queue"></div></div>
+          <div class="lane"><div class="lane-head">ĐANG LÀM <span id="c-doing">0</span></div><div id="l-doing"></div></div>
+          <div class="lane"><div class="lane-head">REVIEW <span id="c-review">0</span></div><div id="l-review"></div></div>
+          <div class="lane"><div class="lane-head">XONG <span id="c-done">0</span></div><div id="l-done"></div></div>
+        </div>
+      </div>
+
+      <div class="card" style="padding:10px">
+        <form class="cmd" id="cmd-form" autocomplete="off">
+          <span class="prompt">&gt;_</span>
+          <input id="cmd-input" placeholder="Giao việc cho đội AI..." />
+          <button type="submit" id="cmd-btn">Giao việc ↵</button>
+        </form>
+        <div class="chips" style="padding:0 8px 4px">
+          <button class="chip" type="button">Lên chiến dịch Black Friday cho shop</button>
+          <button class="chip" type="button">Tuyển 3 nhân viên kho</button>
+          <button class="chip" type="button">Làm báo cáo doanh thu tháng 10</button>
+        </div>
+      </div>
+    </main>
+
+    <!-- RIGHT: KPIs, chart, feed -->
+    <aside class="col right">
+      <div class="kpis">
+        <div class="card kpi"><div class="kpi-label">Đơn hàng hôm nay</div><div class="kpi-value" id="k-orders">1.259</div><div class="kpi-sub">+12%</div></div>
+        <div class="card kpi"><div class="kpi-label">Doanh thu (triệu)</div><div class="kpi-value" id="k-rev">320,2</div><div class="kpi-sub">+8%</div></div>
+        <div class="card kpi"><div class="kpi-label">Tin nhắn đã trả lời</div><div class="kpi-value" id="k-msg">9.674</div><div class="kpi-sub">phản hồi 4 giây</div></div>
+        <div class="card kpi"><div class="kpi-label">Việc đã xong</div><div class="kpi-value" id="k-done">1.883</div><div class="kpi-sub">0 việc trễ hạn</div></div>
+      </div>
+      <div class="card chart">
+        <div class="card-title">Đơn hàng / phút <span class="hi" id="opm">30 ĐƠN</span></div>
+        <svg id="spark" viewBox="0 0 300 130" preserveAspectRatio="none"></svg>
+      </div>
+      <div class="card">
+        <div class="card-title">Luồng tin giữa các agent <span class="hi">LIVE</span></div>
+        <div class="feed" id="feed"></div>
+      </div>
+    </aside>
+  </div>
+
+  <footer>Mô phỏng hệ thống AI Agent · dữ liệu giả lập</footer>
+</div>
+
+<script>
+(() => {
+  // ---------- Data ----------
+  const ROOMS = [
+    { id: 'kd', name: 'Phòng Kinh doanh', gx: 0, gy: 0, floor: ['#3a2416', '#2e1c12'] },
+    { id: 'mk', name: 'Phòng Marketing',  gx: 1, gy: 0, floor: ['#1a2758', '#141f47'] },
+    { id: 'dv', name: 'Phòng Dev',        gx: 0, gy: 1, floor: ['#12302a', '#0e2621'] },
+    { id: 'dh', name: 'Phòng Điều hành',  gx: 1, gy: 1, floor: ['#35221a', '#2a1a13'] },
+  ];
+  const SLOTS = [[1.6, 1.4], [5.8, 1.4], [1.6, 5.4], [5.8, 5.4]];
+  const AGENTS = [
+    { id: 'sale',     name: 'Sale',      room: 'kd', slot: 0, color: '#ff8a3d', act: 'Chốt đơn qua inbox' },
+    { id: 'crm',      name: 'CRM',       room: 'kd', slot: 1, color: '#3ddc84', act: 'Phân loại khách hàng' },
+    { id: 'cskh',     name: 'CSKH',      room: 'kd', slot: 2, color: '#2bc4c4', act: 'Trả lời tin nhắn' },
+    { id: 'ketoan',   name: 'Kế toán',   room: 'kd', slot: 3, color: '#f5c542', act: 'Đối soát công nợ' },
+    { id: 'content',  name: 'Content',   room: 'mk', slot: 0, color: '#9be15d', act: 'Viết bài fanpage' },
+    { id: 'designer', name: 'Designer',  room: 'mk', slot: 1, color: '#e055d6', act: 'Thiết kế banner' },
+    { id: 'ads',      name: 'Ads',       room: 'mk', slot: 2, color: '#ff5a4e', act: 'Tối ưu CPA' },
+    { id: 'video',    name: 'Video',     room: 'mk', slot: 3, color: '#ff4060', act: 'Dựng video ngắn' },
+    { id: 'dev',      name: 'Dev',       room: 'dv', slot: 0, color: '#8b5cf6', act: 'Sửa lỗi checkout' },
+    { id: 'seo',      name: 'SEO',       room: 'dv', slot: 1, color: '#3b82f6', act: 'Audit từ khoá' },
+    { id: 'data',     name: 'Data',      room: 'dv', slot: 2, color: '#4f7cff', act: 'Làm sạch dữ liệu' },
+    { id: 'baocao',   name: 'Báo cáo',   room: 'dv', slot: 3, color: '#22b8cf', act: 'Tổng hợp số liệu' },
+    { id: 'quanly',   name: 'Quản lý',   room: 'dh', slot: 0, color: '#2ff59a', act: 'Điều phối đội' },
+    { id: 'kho',      name: 'Kho',       room: 'dh', slot: 2, color: '#ffa94d', act: 'Kiểm tồn kho' },
+    { id: 'nhansu',   name: 'Nhân sự',   room: 'dh', slot: 3, color: '#f06595', act: 'Lọc hồ sơ' },
+  ];
+  const byId = Object.fromEntries(AGENTS.map(a => [a.id, a]));
+
+  const AMBIENT = [
+    ['dev', 'quanly', 'đã deploy bản sửa lỗi checkout', 'Báo cáo'],
+    ['data', 'ads', 'tệp khách nóng đã cập nhật', 'Gửi data'],
+    ['kho', 'sale', 'mã SP-118 sắp hết, báo khách', 'Cảnh báo'],
+    ['cskh', 'crm', 'lưu 12 khách mới vào CRM', 'Khách mới'],
+    ['designer', 'ads', '5 banner xong, lên camp được rồi', 'Gửi file'],
+    ['content', 'designer', 'brief 5 bài đã xong', 'Gửi brief'],
+    ['sale', 'ketoan', 'khách #312 đã cọc, xuất hoá đơn', 'Hoá đơn'],
+    ['seo', 'content', '8 từ khoá mới cần viết bài', 'Gửi brief'],
+    ['ads', 'baocao', 'ROAS hôm nay 4.2', 'Số liệu'],
+    ['baocao', 'quanly', 'báo cáo ngày đã gửi', 'Báo cáo'],
+    ['nhansu', 'quanly', '3 ứng viên đạt vòng 1', 'Báo cáo'],
+    ['video', 'content', 'video teaser xong, cần caption', 'Gửi file'],
+    ['crm', 'sale', '25 khách cần gọi lại hôm nay', 'Gửi list'],
+    ['ketoan', 'baocao', 'đối soát tuần khớp 100%', 'Số liệu'],
+  ];
+  const ROUTINE = [
+    ['Trả lời 30 tin nhắn mới', 'cskh'], ['Viết 3 caption sản phẩm', 'content'], ['Kiểm tồn kho cuối ngày', 'kho'],
+    ['Tối ưu 2 nhóm quảng cáo', 'ads'], ['Cập nhật sitemap', 'seo'], ['Gọi lại 10 khách bỏ giỏ', 'sale'],
+    ['Làm sạch 500 dòng dữ liệu', 'data'], ['Resize 8 ảnh sản phẩm', 'designer'], ['Xuất 5 hoá đơn', 'ketoan'],
+  ];
+  const PLANS = [
+    { re: /black\s*friday|khuyến mãi|sale off|giảm giá/i, tasks: [
+      ['Kịch bản chốt đơn', 'sale'], ['Nhắn 2.400 khách cũ', 'crm'], ['Lên 6 camp quảng cáo', 'ads'],
+      ['Viết 10 bài Black Friday', 'content'], ['Thiết kế 12 banner', 'designer'], ['Dựng 4 video teaser', 'video'],
+      ['Landing page Black Friday', 'dev'], ['Cập nhật giá 180 SP', 'kho']] },
+    { re: /tuyển|nhân sự|ứng viên/i, tasks: [
+      ['Viết JD vị trí', 'nhansu'], ['Bài đăng tuyển dụng', 'content'], ['Ảnh tuyển dụng', 'designer'],
+      ['Chạy ads tuyển dụng', 'ads'], ['Lọc CV tự động', 'data'], ['Dự trù quỹ lương', 'ketoan']] },
+    { re: /báo cáo|doanh thu|thống kê/i, tasks: [
+      ['Kéo dữ liệu đơn hàng', 'data'], ['Đối soát doanh thu', 'ketoan'], ['Số liệu quảng cáo', 'ads'],
+      ['Ghi chú pipeline', 'sale'], ['Lập báo cáo tổng', 'baocao']] },
+  ];
+
+  // ---------- Isometric helpers ----------
+  const S = 16, ROOM = 9, GAP = 1.4, COS = 0.866;
+  const iso = (x, y, z = 0) => [(x - y) * COS * S, (x + y) * 0.5 * S - z * S + 10];
+  const pts = arr => arr.map(p => iso(...p).map(n => n.toFixed(1)).join(',')).join(' ');
+  const NS = 'http://www.w3.org/2000/svg';
+  const el = (tag, attrs = {}, parent) => {
+    const e = document.createElementNS(NS, tag);
+    for (const k in attrs) e.setAttribute(k, attrs[k]);
+    if (parent) parent.appendChild(e);
+    return e;
+  };
+  function box(parent, x, y, z, w, d, h, top, left, right) {
+    const g = el('g', {}, parent);
+    el('polygon', { points: pts([[x, y + d, z], [x + w, y + d, z], [x + w, y + d, z + h], [x, y + d, z + h]]), fill: left }, g);
+    el('polygon', { points: pts([[x + w, y, z], [x + w, y + d, z], [x + w, y + d, z + h], [x + w, y, z + h]]), fill: right }, g);
+    el('polygon', { points: pts([[x, y, z + h], [x + w, y, z + h], [x + w, y + d, z + h], [x, y + d, z + h]]), fill: top }, g);
+    return g;
+  }
+  const roomOrigin = r => [r.gx * (ROOM + GAP), r.gy * (ROOM + GAP)];
+
+  // ---------- Build office ----------
+  const svg = document.getElementById('office');
+  const defs = el('defs', {}, svg);
+  const glow = el('filter', { id: 'glow', x: '-50%', y: '-50%', width: '200%', height: '200%' }, defs);
+  el('feGaussianBlur', { stdDeviation: 3, result: 'b' }, glow);
+  const fm = el('feMerge', {}, glow); el('feMergeNode', { in: 'b' }, fm); el('feMergeNode', { in: 'SourceGraphic' }, fm);
+
+  // ground shadow
+  const T = ROOM * 2 + GAP;
+  el('polygon', { points: pts([[-1, -1, -0.8], [T + 1, -1, -0.8], [T + 1, T + 1, -0.8], [-1, T + 1, -0.8]]), fill: '#030606', opacity: 0.9 }, svg);
+
+  const sceneLayer = el('g', {}, svg);
+  const arcLayer = el('g', {}, svg);
+  const agentEls = {};
+
+  const drawOrder = [...ROOMS].sort((a, b) => (a.gx + a.gy) - (b.gx + b.gy));
+  for (const r of drawOrder) {
+    const [ox, oy] = roomOrigin(r);
+    const g = el('g', {}, sceneLayer);
+    // slab
+    box(g, ox, oy, -0.5, ROOM, ROOM, 0.5, r.floor[0], '#0b1512', '#0f1c18');
+    // checker floor
+    for (let i = 0; i < ROOM; i += 1.5) for (let j = 0; j < ROOM; j += 1.5) {
+      if (((i + j) / 1.5) % 2 === 0) continue;
+      el('polygon', { points: pts([[ox + i, oy + j, 0], [ox + i + 1.5, oy + j, 0], [ox + i + 1.5, oy + j + 1.5, 0], [ox + i, oy + j + 1.5, 0]]), fill: r.floor[1] }, g);
+    }
+    // glass back walls
+    const H = 2.4, wallStyle = { fill: 'rgba(120,255,190,0.045)', stroke: 'rgba(120,255,190,0.28)', 'stroke-width': 1 };
+    el('polygon', { points: pts([[ox, oy, 0], [ox + ROOM, oy, 0], [ox + ROOM, oy, H], [ox, oy, H]]), ...wallStyle }, g);
+    el('polygon', { points: pts([[ox, oy, 0], [ox, oy + ROOM, 0], [ox, oy + ROOM, H], [ox, oy, H]]), ...wallStyle }, g);
+    // front low glass rim
+    el('polyline', { points: pts([[ox, oy + ROOM, 0.6], [ox + ROOM, oy + ROOM, 0.6], [ox + ROOM, oy, 0.6]]), fill: 'none', stroke: 'rgba(120,255,190,0.22)', 'stroke-width': 1 }, g);
+    el('polyline', { points: pts([[ox, oy + ROOM, 0], [ox + ROOM, oy + ROOM, 0], [ox + ROOM, oy, 0]]), fill: 'none', stroke: 'rgba(120,255,190,0.35)', 'stroke-width': 1.2 }, g);
+    // label along back wall
+    const [lx, ly] = iso(ox + 0.6, oy, H + 0.3);
+    const t = el('text', { x: lx, y: ly, class: 'room-label', transform: `rotate(30 ${lx} ${ly})` }, g);
+    t.textContent = r.name;
+    // plant
+    box(g, ox + ROOM - 1, oy + 0.2, 0, 0.6, 0.6, 0.6, '#6b4a2b', '#4a321d', '#5a3d24');
+    const [px, py] = iso(ox + ROOM - 0.7, oy + 0.5, 1.2);
+    el('circle', { cx: px, cy: py, r: 6, fill: '#2f7d4a' }, g);
+
+    // agents in room, back to front
+    const inRoom = AGENTS.filter(a => a.room === r.id).sort((a, b) => (SLOTS[a.slot][0] + SLOTS[a.slot][1]) - (SLOTS[b.slot][0] + SLOTS[b.slot][1]));
+    for (const a of inRoom) {
+      const [sx, sy] = SLOTS[a.slot];
+      const dx = ox + sx, dy = oy + sy;
+      const ag = el('g', { class: 'agent-g' }, g);
+      // desk + monitor
+      box(ag, dx, dy, 0, 2.4, 1.1, 0.9, '#c9a77a', '#7d6243', '#9a7953');
+      box(ag, dx + 0.4, dy + 0.15, 0.9, 1.6, 0.15, 0.75, '#1d3b30', '#2ff59a', '#1a8f5c');
+      // agent in front of desk
+      const ax = dx + 1.2, ay = dy + 2.1;
+      const [rx, ry] = iso(ax, ay, 0);
+      el('ellipse', { cx: rx, cy: ry, rx: 15, ry: 7.5, fill: 'none', stroke: '#2ff59a', 'stroke-width': 1.5, class: 'ring', opacity: 0.7 }, ag);
+      const fig = el('g', { class: 'fig' }, ag);
+      const [bx, by] = iso(ax, ay, 0.75);
+      el('ellipse', { cx: rx, cy: ry - 1, rx: 7, ry: 3, fill: 'rgba(0,0,0,0.45)' }, fig);
+      el('rect', { x: bx - 7, y: by - 9, width: 14, height: 18, rx: 6, fill: a.color }, fig);
+      const [hx, hy] = iso(ax, ay, 1.85);
+      el('circle', { cx: hx, cy: hy, r: 6.5, fill: '#f4f7f6' }, fig);
+      // name tag
+      const tag = el('g', { class: 'tag' }, ag);
+      const w = a.name.length * 5.6 + 12;
+      el('rect', { x: hx - w / 2, y: hy - 24, width: w, height: 14, rx: 4, fill: 'rgba(0,0,0,0.6)' }, tag);
+      const tt = el('text', { x: hx, y: hy - 14, 'text-anchor': 'middle' }, tag); tt.textContent = a.name;
+      agentEls[a.id] = { g: ag, head: [hx, hy - 4] };
+    }
+  }
+
+  // ---------- State ----------
+  const state = {
+    tasks: [], nextId: 1, cost: 1.85,
+    orders: 1259, rev: 320.2, msgs: 9674, done: 1883,
+    series: Array.from({ length: 40 }, (_, i) => 26 + Math.sin(i / 3) * 4 + Math.random() * 4),
+    campaign: null,
+  };
+  const now = () => Date.now();
+  const rand = (a, b) => a + Math.random() * (b - a);
+  const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+  const fmt = n => Math.round(n).toLocaleString('vi-VN');
+  const hhmm = () => new Date().toTimeString().slice(0, 5);
+
+  function addTask(title, agent, status = 'queue', campaign = null) {
+    const t = { id: state.nextId++, title, agent, status, since: now(), dur: rand(4000, 9000), campaign, fresh: now() };
+    state.tasks.push(t);
+    return t;
+  }
+  [['Backup database', 'dev', 'done'], ['Báo cáo doanh thu', 'baocao', 'done'],
+   ['Đối soát công nợ', 'ketoan', 'review'], ['Trả lời inbox ca đêm', 'cskh', 'review'],
+   ['Lọc 40 hồ sơ', 'nhansu', 'doing']].forEach(([t, a, s]) => { const x = addTask(t, a, s); x.fresh = 0; });
+
+  // ---------- Rendering ----------
+  const $ = id => document.getElementById(id);
+  const listEl = $('agent-list');
+  const rowEls = {};
+  for (const a of AGENTS) {
+    const row = document.createElement('div');
+    row.className = 'agent-row';
+    const initials = a.name.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/đ/gi, 'D').slice(0, 2).toUpperCase();
+    row.innerHTML = `<div class="avatar" style="background:${a.color}">${initials}</div>
+      <div style="min-width:0"><div class="agent-name">${a.name} Agent</div><div class="agent-act"></div></div>
+      <span class="status"></span>`;
+    listEl.appendChild(row);
+    rowEls[a.id] = row;
+  }
+
+  function agentStatus(id) {
+    const ts = state.tasks.filter(t => t.agent === id);
+    const doing = ts.find(t => t.status === 'doing');
+    if (doing) return ['working', 'Đang làm', doing.title];
+    const rev = ts.find(t => t.status === 'review');
+    if (rev) return ['review', 'Chờ duyệt', rev.title];
+    return ['', 'Trực', byId[id].act];
+  }
+
+  function renderAgents() {
+    for (const a of AGENTS) {
+      const [cls, label, act] = agentStatus(a.id);
+      const row = rowEls[a.id];
+      const st = row.querySelector('.status');
+      st.className = 'status ' + cls; st.textContent = label;
+      row.querySelector('.agent-act').textContent = act;
+      agentEls[a.id].g.classList.toggle('working', cls === 'working' || a.id === 'quanly');
+    }
+  }
+
+  const laneSig = {}, shown = new Set();
+  function renderBoard() {
+    const lanes = { queue: [], doing: [], review: [], done: [] };
+    state.tasks.forEach(t => lanes[t.status].push(t));
+    lanes.done.sort((a, b) => b.since - a.since);
+    const LIMIT = 4;
+    for (const k in lanes) {
+      const arr = lanes[k];
+      $('c-' + k).textContent = arr.length;
+      const sig = arr.slice(0, LIMIT).map(t => t.id + (now() - t.fresh < 2500 ? 'n' : '')).join(',') + '|' + arr.length;
+      if (laneSig[k] === sig) continue;
+      laneSig[k] = sig;
+      $('l-' + k).innerHTML = arr.slice(0, LIMIT).map(t =>
+        `<div class="task ${now() - t.fresh < 2500 ? 'new' : ''}" style="${shown.has(t.id + k) ? 'animation:none' : ''}"><div class="task-title">${t.title}</div><div class="task-agent">${byId[t.agent].name} Agent</div></div>`
+      ).join('') + (arr.length > LIMIT ? `<div class="more">+${arr.length - LIMIT} việc</div>` : '');
+      arr.slice(0, LIMIT).forEach(t => shown.add(t.id + k));
+    }
+    $('h-queue').textContent = lanes.queue.length;
+    if (state.campaign) {
+      const c = state.tasks.filter(t => t.campaign === state.campaign.id);
+      const d = c.filter(t => t.status === 'done').length;
+      $('campaign').textContent = `${state.campaign.name}: ${d}/${c.length} xong`;
+    }
+  }
+
+  function renderKpis() {
+    $('k-orders').textContent = fmt(state.orders);
+    $('k-rev').textContent = state.rev.toLocaleString('vi-VN', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+    $('k-msg').textContent = fmt(state.msgs);
+    $('k-done').textContent = fmt(state.done);
+    $('h-cost').textContent = state.cost.toLocaleString('vi-VN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' USD';
+  }
+
+  const spark = $('spark');
+  spark.innerHTML = `<defs><linearGradient id="sg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2ff59a" stop-opacity="0.35"/><stop offset="1" stop-color="#2ff59a" stop-opacity="0"/></linearGradient></defs>
+    ${[30, 65, 100].map(y => `<line x1="0" x2="300" y1="${y}" y2="${y}" stroke="#16302a" stroke-width="1"/>`).join('')}
+    <path id="sp-area" fill="url(#sg)"/><path id="sp-line" fill="none" stroke="#2ff59a" stroke-width="2.2" stroke-linejoin="round"/>
+    <circle id="sp-dot" r="4" fill="#fff"/>`;
+  function renderSpark() {
+    const s = state.series, n = s.length;
+    const xy = s.map((v, i) => [i * 300 / (n - 1), 120 - (v - 10) * 3]);
+    const d = xy.map((p, i) => (i ? 'L' : 'M') + p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join(' ');
+    $('sp-line').setAttribute('d', d);
+    $('sp-area').setAttribute('d', d + ' L300 130 L0 130 Z');
+    const last = xy[n - 1];
+    $('sp-dot').setAttribute('cx', last[0] - 3); $('sp-dot').setAttribute('cy', last[1]);
+    $('opm').textContent = Math.round(s[n - 1]) + ' ĐƠN';
+  }
+
+  const feed = $('feed');
+  function log(from, to, text) {
+    const div = document.createElement('div');
+    div.className = 'msg';
+    div.innerHTML = `<time>${hhmm()}</time><div><b>${byId[from].name}</b> → <b>${byId[to].name}</b>: ${text}</div>`;
+    feed.prepend(div);
+    while (feed.children.length > 14) feed.lastChild.remove();
+    state.cost += rand(0.001, 0.008);
+  }
+
+  function note(text) {
+    const div = document.createElement('div');
+    div.className = 'msg';
+    div.innerHTML = `<time>${hhmm()}</time><div style="color:var(--amber)">${text}</div>`;
+    feed.prepend(div);
+  }
+
+  function flash(id) {
+    const r = rowEls[id]; r.classList.add('flash'); setTimeout(() => r.classList.remove('flash'), 900);
+  }
+
+  // ---------- Arcs ----------
+  function arc(from, to, label) {
+    const [x1, y1] = agentEls[from].head, [x2, y2] = agentEls[to].head;
+    const mx = (x1 + x2) / 2, my = Math.min(y1, y2) - 60 - Math.abs(x1 - x2) * 0.15;
+    const g = el('g', { class: 'arc-g' }, arcLayer);
+    const path = el('path', { d: `M${x1} ${y1} Q${mx} ${my} ${x2} ${y2}`, class: 'arc' }, g);
+    const dot = el('circle', { r: 4, fill: '#fff', filter: 'url(#glow)' }, g);
+    const len = path.getTotalLength();
+    const mid = path.getPointAtLength(len / 2);
+    const b = el('g', { class: 'bubble' }, g);
+    const w = label.length * 6.2 + 16;
+    el('rect', { x: mid.x - w / 2, y: mid.y - 11, width: w, height: 20, rx: 6 }, b);
+    const t = el('text', { x: mid.x, y: mid.y + 3, 'text-anchor': 'middle' }, b); t.textContent = label;
+    const start = performance.now(), D = 1400;
+    (function step(ts) {
+      const k = Math.min(1, (ts - start) / D);
+      const p = path.getPointAtLength(len * k);
+      dot.setAttribute('cx', p.x); dot.setAttribute('cy', p.y);
+      if (k < 1) requestAnimationFrame(step);
+      else { flash(to); setTimeout(() => { g.style.opacity = 0; setTimeout(() => g.remove(), 500); }, 900); }
+    })(start);
+  }
+
+  // ---------- Simulation ----------
+  function tick() {
+    const t = now();
+    for (const task of state.tasks) {
+      if (task.status === 'queue') {
+        const busy = state.tasks.some(x => x.agent === task.agent && x.status === 'doing');
+        if (!busy && t - task.since > 1200) { task.status = 'doing'; task.since = t; }
+      } else if (task.status === 'doing' && t - task.since > task.dur) {
+        task.status = 'review'; task.since = t;
+        log(task.agent, 'quanly', `xong "${task.title}", nhờ duyệt`);
+        arc(task.agent, 'quanly', 'Xong ✓');
+      } else if (task.status === 'review' && t - task.since > 3500) {
+        task.status = 'done'; task.since = t; state.done++;
+      }
+    }
+    // trim old done tasks
+    const done = state.tasks.filter(x => x.status === 'done').sort((a, b) => b.since - a.since);
+    if (done.length > 12) {
+      const drop = new Set(done.slice(12).filter(x => !state.campaign || x.campaign !== state.campaign.id).map(x => x.id));
+      state.tasks = state.tasks.filter(x => !drop.has(x.id));
+    }
+    renderBoard(); renderAgents(); renderKpis();
+  }
+
+  function ambient() {
+    const [f, to, text, label] = pick(AMBIENT);
+    log(f, to, text); arc(f, to, label);
+    state.msgs += Math.floor(rand(2, 9));
+  }
+
+  function routine() {
+    if (state.tasks.filter(t => t.status !== 'done').length > 10) return;
+    const [title, agent] = pick(ROUTINE);
+    addTask(title, agent);
+  }
+
+  function metrics() {
+    const last = state.series[state.series.length - 1];
+    const next = Math.max(14, Math.min(42, last + rand(-3.5, 3.8)));
+    state.series.push(next); state.series.shift();
+    state.orders += Math.floor(next / 20);
+    state.rev += next * 0.012;
+    renderSpark(); renderKpis();
+  }
+
+  // ---------- Command ----------
+  const form = $('cmd-form'), input = $('cmd-input'), btn = $('cmd-btn');
+  function dispatch(cmd) {
+    cmd = cmd.trim(); if (!cmd) return;
+    const plan = PLANS.find(p => p.re.test(cmd));
+    const tasks = plan ? plan.tasks : [
+      ['Nghiên cứu yêu cầu', 'data'], ['Viết nội dung', 'content'], ['Thiết kế hình ảnh', 'designer'],
+      ['Lên kế hoạch quảng cáo', 'ads'], ['Báo giá & chốt khách', 'sale']];
+    const cid = 'c' + now();
+    let short = cmd.replace(/^(lên|làm|tạo)?\s*(chiến dịch|kế hoạch)?\s*/i, '').replace(/\s+cho shop$/i, '') || cmd;
+    if (short.length > 26) short = short.slice(0, 26) + '…';
+    const name = 'Chiến dịch ' + short;
+    state.campaign = { id: cid, name };
+    note(`Quản lý nhận lệnh "${cmd}" → chia cho ${tasks.length} agent`);
+    tasks.forEach(([title, agent], i) => {
+      setTimeout(() => {
+        addTask(title, agent, 'queue', cid);
+        log('quanly', agent, `việc mới: ${title.toLowerCase()}`);
+        arc('quanly', agent, 'Việc mới');
+        renderBoard();
+      }, 250 + i * 320);
+    });
+    if (tasks.some(t => t[1] === 'content') && tasks.some(t => t[1] === 'designer')) {
+      setTimeout(() => { log('content', 'designer', 'gửi brief cho bộ hình'); arc('content', 'designer', 'Gửi brief'); }, 400 + tasks.length * 320);
+    }
+    btn.textContent = `✓ Đã chia cho ${tasks.length} agent`;
+    setTimeout(() => { btn.textContent = 'Giao việc ↵'; }, 3500);
+  }
+  form.addEventListener('submit', e => { e.preventDefault(); dispatch(input.value); });
+  document.querySelectorAll('.chip').forEach(c => c.addEventListener('click', () => { input.value = c.textContent; dispatch(c.textContent); }));
+
+  // ---------- Clock & loops ----------
+  const clock = () => { $('h-clock').textContent = new Date().toTimeString().slice(0, 8); };
+  clock(); setInterval(clock, 1000);
+  for (let i = 0; i < 6; i++) { const [f, to, text] = AMBIENT[i]; log(f, to, text); }
+  renderSpark(); tick();
+  setInterval(tick, 1000);
+  setInterval(ambient, 2600);
+  setInterval(routine, 7000);
+  setInterval(metrics, 2000);
+  setTimeout(ambient, 600);
+})();
+</script>
+</body>
+</html>
