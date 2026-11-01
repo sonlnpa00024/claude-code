@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AI Command Center</title>
+<title>Hội Lão Command Center</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
@@ -38,7 +38,7 @@
 
   /* Header */
   header { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-bottom: 16px; }
-  .logo { font-weight: 800; font-size: 22px; letter-spacing: -0.5px; }
+  .logo { font-weight: 800; font-size: 22px; letter-spacing: -0.5px; line-height: 1.4; }
   .logo span { color: var(--accent); }
   .subtitle { font-size: 10px; letter-spacing: 3px; color: var(--muted); text-transform: uppercase; }
   .pills { margin-left: auto; display: flex; gap: 8px; flex-wrap: wrap; }
@@ -68,11 +68,16 @@
   .card-title .hi { color: var(--accent); }
 
   /* Agent list */
+  #agent-list { max-height: 1010px; overflow-y: auto; margin-right: -6px; padding-right: 6px; }
+  #agent-list::-webkit-scrollbar { width: 5px; }
+  #agent-list::-webkit-scrollbar-thumb { background: var(--border-hi); border-radius: 3px; }
+  .group-head { font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--accent); opacity: .8; padding: 10px 4px 4px; border-top: 1px solid var(--border); margin-top: 4px; }
+  .group-head:first-child { border-top: none; margin-top: 0; padding-top: 0; }
   .agent-row { display: grid; grid-template-columns: 30px 1fr auto; gap: 10px; align-items: center; padding: 7px 4px; border-radius: 8px; transition: background .3s; }
   .agent-row.flash { background: var(--accent-dim); }
   .avatar { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; font-size: 10px; font-weight: 800; color: #05080a; }
   .agent-name { font-size: 13px; font-weight: 600; }
-  .agent-act { font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 140px; }
+  .agent-act { font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 150px; }
   .status {
     font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 999px; white-space: nowrap;
     background: rgba(125,148,141,0.12); color: var(--muted);
@@ -97,6 +102,7 @@
   .bubble text { fill: var(--accent); font: 700 11px var(--font); }
   .room-label { font: 700 10px var(--font); letter-spacing: 2px; fill: rgba(200,255,230,0.55); text-transform: uppercase; }
   .tag text { font: 700 9px var(--font); fill: #fff; }
+  .agent-g { cursor: default; }
 
   /* Kanban */
   .board { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 10px; }
@@ -164,11 +170,11 @@
 <div class="app">
   <header>
     <div>
-      <div class="logo">AI<span>OFFICE</span></div>
+      <div class="logo">HỘI<span>LÃO</span></div>
       <div class="subtitle">AI Command Center</div>
     </div>
     <div class="pills">
-      <div class="pill"><span class="dot"></span><b id="h-running">15/15</b> agent đang chạy</div>
+      <div class="pill"><span class="dot"></span><b id="h-running">–</b> lão đang chạy</div>
       <div class="pill">Việc trong hàng đợi: <b id="h-queue">0</b></div>
       <div class="pill">Chi phí AI hôm nay: <b id="h-cost">1,85 USD</b></div>
       <div class="pill live"><span class="dot"></span>LIVE <span id="h-clock">--:--:--</span></div>
@@ -179,7 +185,7 @@
     <!-- LEFT: agents -->
     <aside class="col left">
       <div class="card">
-        <div class="card-title">Đội AI Agent <span class="hi" id="online-count">15/15 online</span></div>
+        <div class="card-title">Đội Lão <span class="hi" id="online-count"></span></div>
         <div id="agent-list"></div>
       </div>
     </aside>
@@ -187,8 +193,8 @@
     <!-- CENTER: office + board + command -->
     <main class="col">
       <div class="card office">
-        <div class="card-title" style="padding:4px 4px 0">Văn phòng AI · Trực tiếp <span class="live-tag"><span class="dot"></span>LIVE</span></div>
-        <svg id="office" viewBox="-285 -45 570 370" aria-label="Văn phòng AI isometric"></svg>
+        <div class="card-title" style="padding:4px 4px 0">Văn phòng Hội Lão · Trực tiếp <span class="live-tag"><span class="dot"></span>LIVE</span></div>
+        <svg id="office" aria-label="Văn phòng các lão, nhìn chéo"></svg>
       </div>
 
       <div class="card">
@@ -204,13 +210,14 @@
       <div class="card" style="padding:10px">
         <form class="cmd" id="cmd-form" autocomplete="off">
           <span class="prompt">&gt;_</span>
-          <input id="cmd-input" placeholder="Giao việc cho đội AI..." />
+          <input id="cmd-input" placeholder="Giao việc cho Đại trưởng lão..." />
           <button type="submit" id="cmd-btn">Giao việc ↵</button>
         </form>
         <div class="chips" style="padding:0 8px 4px">
-          <button class="chip" type="button">Lên chiến dịch Black Friday cho shop</button>
-          <button class="chip" type="button">Tuyển 3 nhân viên kho</button>
-          <button class="chip" type="button">Làm báo cáo doanh thu tháng 10</button>
+          <button class="chip" type="button">Nhập hàng xe a Vinh hôm nay</button>
+          <button class="chip" type="button">Kiểm kê kho cuối tháng</button>
+          <button class="chip" type="button">Xử lý đơn khách Cty có VAT</button>
+          <button class="chip" type="button">Chấm công tháng 10</button>
         </div>
       </div>
     </main>
@@ -218,91 +225,124 @@
     <!-- RIGHT: KPIs, chart, feed -->
     <aside class="col right">
       <div class="kpis">
-        <div class="card kpi"><div class="kpi-label">Đơn hàng hôm nay</div><div class="kpi-value" id="k-orders">1.259</div><div class="kpi-sub">+12%</div></div>
-        <div class="card kpi"><div class="kpi-label">Doanh thu (triệu)</div><div class="kpi-value" id="k-rev">320,2</div><div class="kpi-sub">+8%</div></div>
-        <div class="card kpi"><div class="kpi-label">Tin nhắn đã trả lời</div><div class="kpi-value" id="k-msg">9.674</div><div class="kpi-sub">phản hồi 4 giây</div></div>
+        <div class="card kpi"><div class="kpi-label">Đơn đã nhập hôm nay</div><div class="kpi-value" id="k-orders">486</div><div class="kpi-sub">+12% so với hôm qua</div></div>
+        <div class="card kpi"><div class="kpi-label">Lô hàng đã kiểm</div><div class="kpi-value" id="k-rev">37</div><div class="kpi-sub">lệch 0,4%</div></div>
+        <div class="card kpi"><div class="kpi-label">Đơn Cty / VAT</div><div class="kpi-value" id="k-msg">64</div><div class="kpi-sub">đã xuất hoá đơn</div></div>
         <div class="card kpi"><div class="kpi-label">Việc đã xong</div><div class="kpi-value" id="k-done">1.883</div><div class="kpi-sub">0 việc trễ hạn</div></div>
       </div>
       <div class="card chart">
-        <div class="card-title">Đơn hàng / phút <span class="hi" id="opm">30 ĐƠN</span></div>
+        <div class="card-title">Đơn nhập / phút <span class="hi" id="opm">22 ĐƠN</span></div>
         <svg id="spark" viewBox="0 0 300 130" preserveAspectRatio="none"></svg>
       </div>
       <div class="card">
-        <div class="card-title">Luồng tin giữa các agent <span class="hi">LIVE</span></div>
+        <div class="card-title">Luồng tin giữa các lão <span class="hi">LIVE</span></div>
         <div class="feed" id="feed"></div>
       </div>
     </aside>
   </div>
 
-  <footer>Mô phỏng hệ thống AI Agent · dữ liệu giả lập</footer>
+  <footer>Mô phỏng Hội Lão · dữ liệu giả lập</footer>
 </div>
 
 <script>
 (() => {
   // ---------- Data ----------
+  // Phòng: toạ độ (x, y) và kích thước (w, d) theo đơn vị iso; cols = số bàn mỗi hàng
   const ROOMS = [
-    { id: 'kd', name: 'Phòng Kinh doanh', gx: 0, gy: 0, floor: ['#3a2416', '#2e1c12'] },
-    { id: 'mk', name: 'Phòng Marketing',  gx: 1, gy: 0, floor: ['#1a2758', '#141f47'] },
-    { id: 'dv', name: 'Phòng Dev',        gx: 0, gy: 1, floor: ['#12302a', '#0e2621'] },
-    { id: 'dh', name: 'Phòng Điều hành',  gx: 1, gy: 1, floor: ['#35221a', '#2a1a13'] },
+    { id: 'gs', name: 'Phòng Giám sát',            x: 0,    y: 0,  w: 10.5, d: 10.5, cols: 3, hue: 165, floor: ['#12302a', '#0e2621'] },
+    { id: 'nl', name: 'Phòng Nhập liệu, chứng từ', x: 12,   y: 0,  w: 14,   d: 10.5, cols: 4, hue: 215, floor: ['#1a2758', '#141f47'] },
+    { id: 'dh', name: 'Phòng Điều hành', short: 'Điều hành', x: 0,    y: 12, w: 5.5,  d: 6.5,  cols: 1, hue: 45,  floor: ['#35221a', '#2a1a13'] },
+    { id: 'xd', name: 'Phòng Xử lý đơn',           x: 7,    y: 12, w: 11,   d: 6.5,  cols: 3, hue: 22,  floor: ['#3a2416', '#2e1c12'] },
+    { id: 'ns', name: 'Phòng Nhân sự',             x: 19.5, y: 12, w: 6.5,  d: 6.5,  cols: 2, hue: 320, floor: ['#3a1a33', '#2d1428'] },
   ];
-  const SLOTS = [[1.6, 1.4], [5.8, 1.4], [1.6, 5.4], [5.8, 5.4]];
+  const roomById = Object.fromEntries(ROOMS.map(r => [r.id, r]));
   const AGENTS = [
-    { id: 'sale',     name: 'Sale',      room: 'kd', slot: 0, color: '#ff8a3d', act: 'Chốt đơn qua inbox' },
-    { id: 'crm',      name: 'CRM',       room: 'kd', slot: 1, color: '#3ddc84', act: 'Phân loại khách hàng' },
-    { id: 'cskh',     name: 'CSKH',      room: 'kd', slot: 2, color: '#2bc4c4', act: 'Trả lời tin nhắn' },
-    { id: 'ketoan',   name: 'Kế toán',   room: 'kd', slot: 3, color: '#f5c542', act: 'Đối soát công nợ' },
-    { id: 'content',  name: 'Content',   room: 'mk', slot: 0, color: '#9be15d', act: 'Viết bài fanpage' },
-    { id: 'designer', name: 'Designer',  room: 'mk', slot: 1, color: '#e055d6', act: 'Thiết kế banner' },
-    { id: 'ads',      name: 'Ads',       room: 'mk', slot: 2, color: '#ff5a4e', act: 'Tối ưu CPA' },
-    { id: 'video',    name: 'Video',     room: 'mk', slot: 3, color: '#ff4060', act: 'Dựng video ngắn' },
-    { id: 'dev',      name: 'Dev',       room: 'dv', slot: 0, color: '#8b5cf6', act: 'Sửa lỗi checkout' },
-    { id: 'seo',      name: 'SEO',       room: 'dv', slot: 1, color: '#3b82f6', act: 'Audit từ khoá' },
-    { id: 'data',     name: 'Data',      room: 'dv', slot: 2, color: '#4f7cff', act: 'Làm sạch dữ liệu' },
-    { id: 'baocao',   name: 'Báo cáo',   room: 'dv', slot: 3, color: '#22b8cf', act: 'Tổng hợp số liệu' },
-    { id: 'quanly',   name: 'Quản lý',   room: 'dh', slot: 0, color: '#2ff59a', act: 'Điều phối đội' },
-    { id: 'kho',      name: 'Kho',       room: 'dh', slot: 2, color: '#ffa94d', act: 'Kiểm tồn kho' },
-    { id: 'nhansu',   name: 'Nhân sự',   room: 'dh', slot: 3, color: '#f06595', act: 'Lọc hồ sơ' },
+    { id: 'dtl', name: 'Đại trưởng lão', role: 'Điều phối toàn đội',          room: 'dh' },
+    { id: 'l2',  name: 'Lão 2',  role: 'Kiểm hàng',                          room: 'gs' },
+    { id: 'l3',  name: 'Lão 3',  role: 'Chỉnh giá vốn',                      room: 'gs' },
+    { id: 'l4',  name: 'Lão 4',  role: 'Tạo công việc kiểm hàng',            room: 'gs' },
+    { id: 'l5',  name: 'Lão 5',  role: 'Trả hàng lỗi',                       room: 'gs' },
+    { id: 'l22', name: 'Lão 22', role: 'Cập nhật giá đơn vị quy đổi',        room: 'gs' },
+    { id: 'l6',  name: 'Lão 6',  role: 'Check hàng về xe a Vinh',            room: 'nl' },
+    { id: 'l7',  name: 'Lão 7',  role: 'Đặt hàng NSX',                       room: 'nl' },
+    { id: 'l11', name: 'Lão 11', role: 'Nhập đơn - Tiến Đức',                room: 'nl' },
+    { id: 'l12', name: 'Lão 12', role: 'Nhập đơn - Nga Bình',                room: 'nl' },
+    { id: 'l13', name: 'Lão 13', role: 'Nhập đơn - Chai Ngọc Nam. A Tú',     room: 'nl' },
+    { id: 'l14', name: 'Lão 14', role: 'Nhập đơn - Băng dính. A Quang',      room: 'nl' },
+    { id: 'l15', name: 'Lão 15', role: 'Nhập đơn - Xe A Vinh',               room: 'nl' },
+    { id: 'l16', name: 'Lão 16', role: 'Nhập đơn - Tuấn Minh',               room: 'nl' },
+    { id: 'l17', name: 'Lão 17', role: 'Nhập đơn - Xe Thanh Sơn',            room: 'nl' },
+    { id: 'l18', name: 'Lão 18', role: 'Nhập đơn - Gift',                    room: 'nl' },
+    { id: 'l21', name: 'Lão 21', role: 'Huỷ đơn hàng',                       room: 'nl' },
+    { id: 'l24', name: 'Lão 24', role: 'Nhập hàng - Long Anh',               room: 'nl' },
+    { id: 'l8',  name: 'Lão 8',  role: 'Tạo đơn VAT khách Cty',              room: 'xd' },
+    { id: 'l9',  name: 'Lão 9',  role: 'Tạo đơn sapo Cty',                   room: 'xd' },
+    { id: 'l10', name: 'Lão 10', role: 'Tạo đơn Random',                     room: 'xd' },
+    { id: 'l19', name: 'Lão 19', role: 'Cập nhật công',                      room: 'ns' },
+    { id: 'l20', name: 'Lão 20', role: 'Tạo TK chấm công cho NV',            room: 'ns' },
   ];
+  // Màu: mỗi phòng một tông, lệch sắc độ nhẹ giữa các lão; vị trí bàn tự xếp theo lưới
+  const CELL = 3.4;
+  for (const r of ROOMS) {
+    const members = AGENTS.filter(a => a.room === r.id);
+    const rows = Math.ceil(members.length / r.cols);
+    const sx = (r.w - (r.cols * CELL - 1)) / 2, sy = (r.d - rows * CELL) / 2 + 0.2;
+    members.forEach((a, i) => {
+      a.color = a.id === 'dtl' ? '#f5c542' : `hsl(${r.hue + (i - members.length / 2) * 9}, 78%, 62%)`;
+      a.dx = r.x + sx + (i % r.cols) * CELL;
+      a.dy = r.y + sy + Math.floor(i / r.cols) * CELL;
+    });
+  }
   const byId = Object.fromEntries(AGENTS.map(a => [a.id, a]));
 
   const AMBIENT = [
-    ['dev', 'quanly', 'đã deploy bản sửa lỗi checkout', 'Báo cáo'],
-    ['data', 'ads', 'tệp khách nóng đã cập nhật', 'Gửi data'],
-    ['kho', 'sale', 'mã SP-118 sắp hết, báo khách', 'Cảnh báo'],
-    ['cskh', 'crm', 'lưu 12 khách mới vào CRM', 'Khách mới'],
-    ['designer', 'ads', '5 banner xong, lên camp được rồi', 'Gửi file'],
-    ['content', 'designer', 'brief 5 bài đã xong', 'Gửi brief'],
-    ['sale', 'ketoan', 'khách #312 đã cọc, xuất hoá đơn', 'Hoá đơn'],
-    ['seo', 'content', '8 từ khoá mới cần viết bài', 'Gửi brief'],
-    ['ads', 'baocao', 'ROAS hôm nay 4.2', 'Số liệu'],
-    ['baocao', 'quanly', 'báo cáo ngày đã gửi', 'Báo cáo'],
-    ['nhansu', 'quanly', '3 ứng viên đạt vòng 1', 'Báo cáo'],
-    ['video', 'content', 'video teaser xong, cần caption', 'Gửi file'],
-    ['crm', 'sale', '25 khách cần gọi lại hôm nay', 'Gửi list'],
-    ['ketoan', 'baocao', 'đối soát tuần khớp 100%', 'Số liệu'],
+    ['l6', 'l15', 'xe a Vinh về đủ 32 kiện', 'Hàng về'],
+    ['l15', 'l2', 'đã nhập đơn xe a Vinh, nhờ kiểm', 'Nhờ kiểm'],
+    ['l2', 'l3', 'lô 1102 lệch 2 SP, xem lại giá vốn', 'Kết quả'],
+    ['l24', 'l3', 'nhập hàng Long Anh xong, cập nhật giá vốn', 'Gửi số liệu'],
+    ['l8', 'l9', 'khách Cty cần xuất VAT, tạo đơn sapo', 'Đơn mới'],
+    ['l9', 'dtl', 'đã tạo 6 đơn sapo Cty', 'Báo cáo'],
+    ['l21', 'l5', 'huỷ đơn #2231, chuyển trả hàng lỗi', 'Chuyển việc'],
+    ['l5', 'l7', '3 SP lỗi, báo NSX đổi trả', 'Báo NSX'],
+    ['l7', 'l6', 'đã đặt 3 đơn NSX, chờ xe về', 'Đặt hàng'],
+    ['l22', 'l3', 'cập nhật quy đổi thùng/chai 12 mã', 'Gửi số liệu'],
+    ['l19', 'l20', 'có 2 NV mới cần tài khoản chấm công', 'Việc mới'],
+    ['l20', 'dtl', 'đã tạo TK chấm công cho 2 NV', 'Báo cáo'],
+    ['l10', 'l18', 'đơn random kèm quà, chuyển Gift', 'Chuyển việc'],
+    ['l4', 'l2', 'tạo phiếu kiểm hàng ca chiều', 'Việc mới'],
+    ['l11', 'l2', 'nhập xong đơn Tiến Đức, nhờ kiểm', 'Nhờ kiểm'],
+    ['l12', 'l2', 'nhập xong đơn Nga Bình', 'Nhờ kiểm'],
+    ['l13', 'l2', 'nhập xong đơn chai Ngọc Nam', 'Nhờ kiểm'],
+    ['l14', 'l2', 'nhập xong đơn băng dính a Quang', 'Nhờ kiểm'],
+    ['l16', 'l2', 'nhập xong đơn Tuấn Minh', 'Nhờ kiểm'],
+    ['l17', 'l2', 'xe Thanh Sơn đã nhập đơn', 'Nhờ kiểm'],
+    ['l3', 'dtl', 'đã chỉnh giá vốn 14 mã', 'Báo cáo'],
   ];
   const ROUTINE = [
-    ['Trả lời 30 tin nhắn mới', 'cskh'], ['Viết 3 caption sản phẩm', 'content'], ['Kiểm tồn kho cuối ngày', 'kho'],
-    ['Tối ưu 2 nhóm quảng cáo', 'ads'], ['Cập nhật sitemap', 'seo'], ['Gọi lại 10 khách bỏ giỏ', 'sale'],
-    ['Làm sạch 500 dòng dữ liệu', 'data'], ['Resize 8 ảnh sản phẩm', 'designer'], ['Xuất 5 hoá đơn', 'ketoan'],
+    ['Kiểm lô hàng mới về', 'l2'], ['Chỉnh giá vốn 8 mã', 'l3'], ['Tạo phiếu kiểm hàng', 'l4'], ['Lập phiếu trả 3 SP lỗi', 'l5'],
+    ['Check hàng xe a Vinh', 'l6'], ['Đặt đơn NSX tuần', 'l7'], ['Tạo đơn VAT khách Cty', 'l8'], ['Tạo 4 đơn sapo Cty', 'l9'],
+    ['Tạo đơn random', 'l10'], ['Nhập đơn Tiến Đức', 'l11'], ['Nhập đơn Nga Bình', 'l12'], ['Nhập đơn chai Ngọc Nam', 'l13'],
+    ['Nhập đơn băng dính a Quang', 'l14'], ['Nhập đơn xe a Vinh', 'l15'], ['Nhập đơn Tuấn Minh', 'l16'], ['Nhập đơn xe Thanh Sơn', 'l17'],
+    ['Nhập đơn Gift', 'l18'], ['Cập nhật công ngày', 'l19'], ['Tạo TK chấm công NV mới', 'l20'], ['Huỷ đơn khách báo huỷ', 'l21'],
+    ['Cập nhật quy đổi thùng/chai', 'l22'], ['Nhập hàng Long Anh', 'l24'],
   ];
   const PLANS = [
-    { re: /black\s*friday|khuyến mãi|sale off|giảm giá/i, tasks: [
-      ['Kịch bản chốt đơn', 'sale'], ['Nhắn 2.400 khách cũ', 'crm'], ['Lên 6 camp quảng cáo', 'ads'],
-      ['Viết 10 bài Black Friday', 'content'], ['Thiết kế 12 banner', 'designer'], ['Dựng 4 video teaser', 'video'],
-      ['Landing page Black Friday', 'dev'], ['Cập nhật giá 180 SP', 'kho']] },
-    { re: /tuyển|nhân sự|ứng viên/i, tasks: [
-      ['Viết JD vị trí', 'nhansu'], ['Bài đăng tuyển dụng', 'content'], ['Ảnh tuyển dụng', 'designer'],
-      ['Chạy ads tuyển dụng', 'ads'], ['Lọc CV tự động', 'data'], ['Dự trù quỹ lương', 'ketoan']] },
-    { re: /báo cáo|doanh thu|thống kê/i, tasks: [
-      ['Kéo dữ liệu đơn hàng', 'data'], ['Đối soát doanh thu', 'ketoan'], ['Số liệu quảng cáo', 'ads'],
-      ['Ghi chú pipeline', 'sale'], ['Lập báo cáo tổng', 'baocao']] },
+    { re: /chấm công|nhân viên|bảng công|\bcông tháng/i, tasks: [
+      ['Tạo TK chấm công NV mới', 'l20'], ['Cập nhật công tháng', 'l19']] },
+    { re: /kiểm kê|kiểm hàng|tồn kho|\btồn\b/i, tasks: [
+      ['Tạo công việc kiểm kê', 'l4'], ['Kiểm hàng toàn kho', 'l2'], ['Rà quy đổi đơn vị', 'l22'],
+      ['Chỉnh giá vốn sau kiểm', 'l3'], ['Gom hàng lỗi để trả', 'l5']] },
+    { re: /hàng về|nhập hàng|\bxe\b/i, tasks: [
+      ['Check hàng về xe a Vinh', 'l6'], ['Nhập đơn xe a Vinh', 'l15'], ['Nhập đơn xe Thanh Sơn', 'l17'],
+      ['Nhập hàng Long Anh', 'l24'], ['Kiểm hàng vừa về', 'l2'], ['Chỉnh giá vốn lô mới', 'l3']] },
+    { re: /đơn|vat|cty|công ty|khách/i, tasks: [
+      ['Tạo đơn VAT khách Cty', 'l8'], ['Tạo đơn sapo Cty', 'l9'], ['Tạo đơn random', 'l10'], ['Huỷ đơn trùng', 'l21']] },
   ];
+  const FALLBACK = [['Tạo công việc kiểm', 'l4'], ['Kiểm hàng', 'l2'], ['Tạo đơn sapo Cty', 'l9'], ['Cập nhật công', 'l19']];
 
   // ---------- Isometric helpers ----------
-  const S = 16, ROOM = 9, GAP = 1.4, COS = 0.866;
-  const iso = (x, y, z = 0) => [(x - y) * COS * S, (x + y) * 0.5 * S - z * S + 10];
+  const S = 16, COS = 0.866;
+  const iso = (x, y, z = 0) => [(x - y) * COS * S, (x + y) * 0.5 * S - z * S];
   const pts = arr => arr.map(p => iso(...p).map(n => n.toFixed(1)).join(',')).join(' ');
   const NS = 'http://www.w3.org/2000/svg';
   const el = (tag, attrs = {}, parent) => {
@@ -318,73 +358,71 @@
     el('polygon', { points: pts([[x, y, z + h], [x + w, y, z + h], [x + w, y + d, z + h], [x, y + d, z + h]]), fill: top }, g);
     return g;
   }
-  const roomOrigin = r => [r.gx * (ROOM + GAP), r.gy * (ROOM + GAP)];
 
   // ---------- Build office ----------
   const svg = document.getElementById('office');
+  {
+    const xs = [], ys = [];
+    for (const r of ROOMS) for (const [cx, cy] of [[r.x, r.y], [r.x + r.w, r.y], [r.x, r.y + r.d], [r.x + r.w, r.y + r.d]])
+      for (const z of [-0.5, 2.6]) { const [a, b] = iso(cx, cy, z); xs.push(a); ys.push(b); }
+    const minX = Math.min(...xs) - 16, maxX = Math.max(...xs) + 16, minY = Math.min(...ys) - 40, maxY = Math.max(...ys) + 40;
+    svg.setAttribute('viewBox', `${minX.toFixed(0)} ${minY.toFixed(0)} ${(maxX - minX).toFixed(0)} ${(maxY - minY).toFixed(0)}`);
+  }
   const defs = el('defs', {}, svg);
   const glow = el('filter', { id: 'glow', x: '-50%', y: '-50%', width: '200%', height: '200%' }, defs);
   el('feGaussianBlur', { stdDeviation: 3, result: 'b' }, glow);
   const fm = el('feMerge', {}, glow); el('feMergeNode', { in: 'b' }, fm); el('feMergeNode', { in: 'SourceGraphic' }, fm);
 
-  // ground shadow
-  const T = ROOM * 2 + GAP;
-  el('polygon', { points: pts([[-1, -1, -0.8], [T + 1, -1, -0.8], [T + 1, T + 1, -0.8], [-1, T + 1, -0.8]]), fill: '#030606', opacity: 0.9 }, svg);
-
   const sceneLayer = el('g', {}, svg);
   const arcLayer = el('g', {}, svg);
   const agentEls = {};
 
-  const drawOrder = [...ROOMS].sort((a, b) => (a.gx + a.gy) - (b.gx + b.gy));
+  const drawOrder = [...ROOMS].sort((a, b) => (a.x + a.y + (a.w + a.d) / 2) - (b.x + b.y + (b.w + b.d) / 2));
   for (const r of drawOrder) {
-    const [ox, oy] = roomOrigin(r);
+    const { x: ox, y: oy, w: W, d: D } = r;
     const g = el('g', {}, sceneLayer);
-    // slab
-    box(g, ox, oy, -0.5, ROOM, ROOM, 0.5, r.floor[0], '#0b1512', '#0f1c18');
-    // checker floor
-    for (let i = 0; i < ROOM; i += 1.5) for (let j = 0; j < ROOM; j += 1.5) {
-      if (((i + j) / 1.5) % 2 === 0) continue;
-      el('polygon', { points: pts([[ox + i, oy + j, 0], [ox + i + 1.5, oy + j, 0], [ox + i + 1.5, oy + j + 1.5, 0], [ox + i, oy + j + 1.5, 0]]), fill: r.floor[1] }, g);
+    el('polygon', { points: pts([[ox - 0.6, oy - 0.6, -0.9], [ox + W + 0.6, oy - 0.6, -0.9], [ox + W + 0.6, oy + D + 0.6, -0.9], [ox - 0.6, oy + D + 0.6, -0.9]]), fill: '#030606', opacity: 0.85 }, g);
+    box(g, ox, oy, -0.5, W, D, 0.5, r.floor[0], '#0b1512', '#0f1c18');
+    const TL = 1.5;
+    for (let i = 0; i < W - 0.01; i += TL) for (let j = 0; j < D - 0.01; j += TL) {
+      if ((Math.round(i / TL) + Math.round(j / TL)) % 2 === 0) continue;
+      const iw = Math.min(TL, W - i), jd = Math.min(TL, D - j);
+      el('polygon', { points: pts([[ox + i, oy + j, 0], [ox + i + iw, oy + j, 0], [ox + i + iw, oy + j + jd, 0], [ox + i, oy + j + jd, 0]]), fill: r.floor[1] }, g);
     }
-    // glass back walls
     const H = 2.4, wallStyle = { fill: 'rgba(120,255,190,0.045)', stroke: 'rgba(120,255,190,0.28)', 'stroke-width': 1 };
-    el('polygon', { points: pts([[ox, oy, 0], [ox + ROOM, oy, 0], [ox + ROOM, oy, H], [ox, oy, H]]), ...wallStyle }, g);
-    el('polygon', { points: pts([[ox, oy, 0], [ox, oy + ROOM, 0], [ox, oy + ROOM, H], [ox, oy, H]]), ...wallStyle }, g);
-    // front low glass rim
-    el('polyline', { points: pts([[ox, oy + ROOM, 0.6], [ox + ROOM, oy + ROOM, 0.6], [ox + ROOM, oy, 0.6]]), fill: 'none', stroke: 'rgba(120,255,190,0.22)', 'stroke-width': 1 }, g);
-    el('polyline', { points: pts([[ox, oy + ROOM, 0], [ox + ROOM, oy + ROOM, 0], [ox + ROOM, oy, 0]]), fill: 'none', stroke: 'rgba(120,255,190,0.35)', 'stroke-width': 1.2 }, g);
-    // label along back wall
-    const [lx, ly] = iso(ox + 0.6, oy, H + 0.3);
+    el('polygon', { points: pts([[ox, oy, 0], [ox + W, oy, 0], [ox + W, oy, H], [ox, oy, H]]), ...wallStyle }, g);
+    el('polygon', { points: pts([[ox, oy, 0], [ox, oy + D, 0], [ox, oy + D, H], [ox, oy, H]]), ...wallStyle }, g);
+    el('polyline', { points: pts([[ox, oy + D, 0.6], [ox + W, oy + D, 0.6], [ox + W, oy, 0.6]]), fill: 'none', stroke: 'rgba(120,255,190,0.22)', 'stroke-width': 1 }, g);
+    el('polyline', { points: pts([[ox, oy + D, 0], [ox + W, oy + D, 0], [ox + W, oy, 0]]), fill: 'none', stroke: 'rgba(120,255,190,0.35)', 'stroke-width': 1.2 }, g);
+    // hàng trên: tên phòng trên vách sau; hàng dưới: tên phòng dưới mép trước (tránh đè phòng khác)
+    const front = oy > 0;
+    let [lx, ly] = front ? iso(ox + 0.4, oy + D, -0.5) : iso(ox + 0.4, oy, H + 0.3);
+    if (front) { lx -= 6; ly += 15; }
     const t = el('text', { x: lx, y: ly, class: 'room-label', transform: `rotate(30 ${lx} ${ly})` }, g);
-    t.textContent = r.name;
-    // plant
-    box(g, ox + ROOM - 1, oy + 0.2, 0, 0.6, 0.6, 0.6, '#6b4a2b', '#4a321d', '#5a3d24');
-    const [px, py] = iso(ox + ROOM - 0.7, oy + 0.5, 1.2);
-    el('circle', { cx: px, cy: py, r: 6, fill: '#2f7d4a' }, g);
+    t.textContent = r.short || r.name;
+    box(g, ox + W - 0.8, oy + D - 0.8, 0, 0.5, 0.5, 0.5, '#6b4a2b', '#4a321d', '#5a3d24');
+    const [px, py] = iso(ox + W - 0.55, oy + D - 0.55, 1.05);
+    el('circle', { cx: px, cy: py, r: 5.5, fill: '#2f7d4a' }, g);
 
-    // agents in room, back to front
-    const inRoom = AGENTS.filter(a => a.room === r.id).sort((a, b) => (SLOTS[a.slot][0] + SLOTS[a.slot][1]) - (SLOTS[b.slot][0] + SLOTS[b.slot][1]));
+    const inRoom = AGENTS.filter(a => a.room === r.id).sort((a, b) => (a.dx + a.dy) - (b.dx + b.dy));
     for (const a of inRoom) {
-      const [sx, sy] = SLOTS[a.slot];
-      const dx = ox + sx, dy = oy + sy;
+      const { dx, dy } = a, boss = a.id === 'dtl';
       const ag = el('g', { class: 'agent-g' }, g);
-      // desk + monitor
-      box(ag, dx, dy, 0, 2.4, 1.1, 0.9, '#c9a77a', '#7d6243', '#9a7953');
-      box(ag, dx + 0.4, dy + 0.15, 0.9, 1.6, 0.15, 0.75, '#1d3b30', '#2ff59a', '#1a8f5c');
-      // agent in front of desk
+      el('title', {}, ag).textContent = boss ? a.name : `${a.name} – ${a.role}`;
+      box(ag, dx, dy, 0, 2.4, 1.1, 0.9, boss ? '#d9b46a' : '#c9a77a', '#7d6243', '#9a7953');
+      box(ag, dx + 0.4, dy + 0.15, 0.9, 1.6, 0.15, 0.75, '#1d3b30', boss ? '#f5c542' : '#2ff59a', boss ? '#a8862e' : '#1a8f5c');
       const ax = dx + 1.2, ay = dy + 2.1;
       const [rx, ry] = iso(ax, ay, 0);
-      el('ellipse', { cx: rx, cy: ry, rx: 15, ry: 7.5, fill: 'none', stroke: '#2ff59a', 'stroke-width': 1.5, class: 'ring', opacity: 0.7 }, ag);
+      el('ellipse', { cx: rx, cy: ry, rx: boss ? 18 : 14, ry: boss ? 9 : 7, fill: 'none', stroke: boss ? '#f5c542' : '#2ff59a', 'stroke-width': 1.5, class: 'ring', opacity: 0.7 }, ag);
       const fig = el('g', { class: 'fig' }, ag);
       const [bx, by] = iso(ax, ay, 0.75);
       el('ellipse', { cx: rx, cy: ry - 1, rx: 7, ry: 3, fill: 'rgba(0,0,0,0.45)' }, fig);
       el('rect', { x: bx - 7, y: by - 9, width: 14, height: 18, rx: 6, fill: a.color }, fig);
       const [hx, hy] = iso(ax, ay, 1.85);
       el('circle', { cx: hx, cy: hy, r: 6.5, fill: '#f4f7f6' }, fig);
-      // name tag
       const tag = el('g', { class: 'tag' }, ag);
-      const w = a.name.length * 5.6 + 12;
-      el('rect', { x: hx - w / 2, y: hy - 24, width: w, height: 14, rx: 4, fill: 'rgba(0,0,0,0.6)' }, tag);
+      const w = a.name.length * 5.4 + 12;
+      el('rect', { x: hx - w / 2, y: hy - 24, width: w, height: 14, rx: 4, fill: boss ? 'rgba(120,90,10,0.85)' : 'rgba(0,0,0,0.6)' }, tag);
       const tt = el('text', { x: hx, y: hy - 14, 'text-anchor': 'middle' }, tag); tt.textContent = a.name;
       agentEls[a.id] = { g: ag, head: [hx, hy - 4] };
     }
@@ -393,8 +431,8 @@
   // ---------- State ----------
   const state = {
     tasks: [], nextId: 1, cost: 1.85,
-    orders: 1259, rev: 320.2, msgs: 9674, done: 1883,
-    series: Array.from({ length: 40 }, (_, i) => 26 + Math.sin(i / 3) * 4 + Math.random() * 4),
+    orders: 486, lots: 37, cty: 64, done: 1883,
+    series: Array.from({ length: 40 }, (_, i) => 22 + Math.sin(i / 3) * 4 + Math.random() * 4),
     campaign: null,
   };
   const now = () => Date.now();
@@ -408,32 +446,40 @@
     state.tasks.push(t);
     return t;
   }
-  [['Backup database', 'dev', 'done'], ['Báo cáo doanh thu', 'baocao', 'done'],
-   ['Đối soát công nợ', 'ketoan', 'review'], ['Trả lời inbox ca đêm', 'cskh', 'review'],
-   ['Lọc 40 hồ sơ', 'nhansu', 'doing']].forEach(([t, a, s]) => { const x = addTask(t, a, s); x.fresh = 0; });
+  [['Kiểm lô hàng 1102', 'l2', 'done'], ['Nhập đơn Tiến Đức', 'l11', 'done'],
+   ['Chỉnh giá vốn 14 mã', 'l3', 'review'], ['Tạo đơn sapo Cty', 'l9', 'review'],
+   ['Nhập đơn xe a Vinh', 'l15', 'doing'], ['Cập nhật công ngày', 'l19', 'doing']].forEach(([t, a, s]) => { const x = addTask(t, a, s); x.fresh = 0; });
 
   // ---------- Rendering ----------
   const $ = id => document.getElementById(id);
   const listEl = $('agent-list');
   const rowEls = {};
-  for (const a of AGENTS) {
-    const row = document.createElement('div');
-    row.className = 'agent-row';
-    const initials = a.name.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/đ/gi, 'D').slice(0, 2).toUpperCase();
-    row.innerHTML = `<div class="avatar" style="background:${a.color}">${initials}</div>
-      <div style="min-width:0"><div class="agent-name">${a.name} Agent</div><div class="agent-act"></div></div>
-      <span class="status"></span>`;
-    listEl.appendChild(row);
-    rowEls[a.id] = row;
+  for (const r of [roomById.dh, roomById.gs, roomById.nl, roomById.xd, roomById.ns]) {
+    const head = document.createElement('div');
+    head.className = 'group-head';
+    head.textContent = r.name;
+    listEl.appendChild(head);
+    for (const a of AGENTS.filter(x => x.room === r.id)) {
+      const row = document.createElement('div');
+      row.className = 'agent-row';
+      row.title = a.id === 'dtl' ? a.name : `${a.name} – ${a.role}`;
+      const initials = a.id === 'dtl' ? 'ĐT' : a.name.replace('Lão ', '');
+      row.innerHTML = `<div class="avatar" style="background:${a.color}">${initials}</div>
+        <div style="min-width:0"><div class="agent-name">${a.name}</div><div class="agent-act"></div></div>
+        <span class="status"></span>`;
+      listEl.appendChild(row);
+      rowEls[a.id] = row;
+    }
   }
 
   function agentStatus(id) {
     const ts = state.tasks.filter(t => t.agent === id);
     const doing = ts.find(t => t.status === 'doing');
     if (doing) return ['working', 'Đang làm', doing.title];
+    if (id === 'dtl') return ['working', 'Điều phối', byId[id].role];
     const rev = ts.find(t => t.status === 'review');
     if (rev) return ['review', 'Chờ duyệt', rev.title];
-    return ['', 'Trực', byId[id].act];
+    return ['', 'Trực', byId[id].role];
   }
 
   function renderAgents() {
@@ -443,7 +489,7 @@
       const st = row.querySelector('.status');
       st.className = 'status ' + cls; st.textContent = label;
       row.querySelector('.agent-act').textContent = act;
-      agentEls[a.id].g.classList.toggle('working', cls === 'working' || a.id === 'quanly');
+      agentEls[a.id].g.classList.toggle('working', cls === 'working' || a.id === 'dtl');
     }
   }
 
@@ -460,7 +506,7 @@
       if (laneSig[k] === sig) continue;
       laneSig[k] = sig;
       $('l-' + k).innerHTML = arr.slice(0, LIMIT).map(t =>
-        `<div class="task ${now() - t.fresh < 2500 ? 'new' : ''}" style="${shown.has(t.id + k) ? 'animation:none' : ''}"><div class="task-title">${t.title}</div><div class="task-agent">${byId[t.agent].name} Agent</div></div>`
+        `<div class="task ${now() - t.fresh < 2500 ? 'new' : ''}" style="${shown.has(t.id + k) ? 'animation:none' : ''}"><div class="task-title">${t.title}</div><div class="task-agent">${byId[t.agent].name}</div></div>`
       ).join('') + (arr.length > LIMIT ? `<div class="more">+${arr.length - LIMIT} việc</div>` : '');
       arr.slice(0, LIMIT).forEach(t => shown.add(t.id + k));
     }
@@ -474,8 +520,8 @@
 
   function renderKpis() {
     $('k-orders').textContent = fmt(state.orders);
-    $('k-rev').textContent = state.rev.toLocaleString('vi-VN', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
-    $('k-msg').textContent = fmt(state.msgs);
+    $('k-rev').textContent = fmt(state.lots);
+    $('k-msg').textContent = fmt(state.cty);
     $('k-done').textContent = fmt(state.done);
     $('h-cost').textContent = state.cost.toLocaleString('vi-VN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' USD';
   }
@@ -550,8 +596,8 @@
         if (!busy && t - task.since > 1200) { task.status = 'doing'; task.since = t; }
       } else if (task.status === 'doing' && t - task.since > task.dur) {
         task.status = 'review'; task.since = t;
-        log(task.agent, 'quanly', `xong "${task.title}", nhờ duyệt`);
-        arc(task.agent, 'quanly', 'Xong ✓');
+        log(task.agent, 'dtl', `xong "${task.title}", nhờ duyệt`);
+        arc(task.agent, 'dtl', 'Xong ✓');
       } else if (task.status === 'review' && t - task.since > 3500) {
         task.status = 'done'; task.since = t; state.done++;
       }
@@ -568,11 +614,12 @@
   function ambient() {
     const [f, to, text, label] = pick(AMBIENT);
     log(f, to, text); arc(f, to, label);
-    state.msgs += Math.floor(rand(2, 9));
+    if (f === 'l8' || f === 'l9') state.cty++;
+    if (to === 'l2' || f === 'l2') state.lots += Math.random() < 0.4 ? 1 : 0;
   }
 
   function routine() {
-    if (state.tasks.filter(t => t.status !== 'done').length > 10) return;
+    if (state.tasks.filter(t => t.status !== 'done').length > 14) return;
     const [title, agent] = pick(ROUTINE);
     addTask(title, agent);
   }
@@ -581,8 +628,7 @@
     const last = state.series[state.series.length - 1];
     const next = Math.max(14, Math.min(42, last + rand(-3.5, 3.8)));
     state.series.push(next); state.series.shift();
-    state.orders += Math.floor(next / 20);
-    state.rev += next * 0.012;
+    state.orders += Math.random() < 0.6 ? Math.ceil(next / 15) : 0;
     renderSpark(); renderKpis();
   }
 
@@ -591,40 +637,40 @@
   function dispatch(cmd) {
     cmd = cmd.trim(); if (!cmd) return;
     const plan = PLANS.find(p => p.re.test(cmd));
-    const tasks = plan ? plan.tasks : [
-      ['Nghiên cứu yêu cầu', 'data'], ['Viết nội dung', 'content'], ['Thiết kế hình ảnh', 'designer'],
-      ['Lên kế hoạch quảng cáo', 'ads'], ['Báo giá & chốt khách', 'sale']];
+    const tasks = plan ? plan.tasks : FALLBACK;
     const cid = 'c' + now();
     let short = cmd.replace(/^(lên|làm|tạo)?\s*(chiến dịch|kế hoạch)?\s*/i, '').replace(/\s+cho shop$/i, '') || cmd;
     if (short.length > 26) short = short.slice(0, 26) + '…';
     const name = 'Chiến dịch ' + short;
     state.campaign = { id: cid, name };
-    note(`Quản lý nhận lệnh "${cmd}" → chia cho ${tasks.length} agent`);
+    note(`Đại trưởng lão nhận lệnh "${cmd}" → chia cho ${tasks.length} lão`);
     tasks.forEach(([title, agent], i) => {
       setTimeout(() => {
         addTask(title, agent, 'queue', cid);
-        log('quanly', agent, `việc mới: ${title.toLowerCase()}`);
-        arc('quanly', agent, 'Việc mới');
+        log('dtl', agent, `việc mới: ${title.toLowerCase()}`);
+        arc('dtl', agent, 'Việc mới');
         renderBoard();
       }, 250 + i * 320);
     });
-    if (tasks.some(t => t[1] === 'content') && tasks.some(t => t[1] === 'designer')) {
-      setTimeout(() => { log('content', 'designer', 'gửi brief cho bộ hình'); arc('content', 'designer', 'Gửi brief'); }, 400 + tasks.length * 320);
+    if (tasks.some(t => t[1] === 'l2') && tasks.some(t => t[1] === 'l3')) {
+      setTimeout(() => { log('l2', 'l3', 'gửi danh sách mã cần soát giá vốn'); arc('l2', 'l3', 'Gửi số liệu'); }, 400 + tasks.length * 320);
     }
-    btn.textContent = `✓ Đã chia cho ${tasks.length} agent`;
+    btn.textContent = `✓ Đã chia cho ${tasks.length} lão`;
     setTimeout(() => { btn.textContent = 'Giao việc ↵'; }, 3500);
   }
   form.addEventListener('submit', e => { e.preventDefault(); dispatch(input.value); });
   document.querySelectorAll('.chip').forEach(c => c.addEventListener('click', () => { input.value = c.textContent; dispatch(c.textContent); }));
 
   // ---------- Clock & loops ----------
+  $('h-running').textContent = `${AGENTS.length}/${AGENTS.length}`;
+  $('online-count').textContent = `${AGENTS.length}/${AGENTS.length} online`;
   const clock = () => { $('h-clock').textContent = new Date().toTimeString().slice(0, 8); };
   clock(); setInterval(clock, 1000);
   for (let i = 0; i < 6; i++) { const [f, to, text] = AMBIENT[i]; log(f, to, text); }
   renderSpark(); tick();
   setInterval(tick, 1000);
   setInterval(ambient, 2600);
-  setInterval(routine, 7000);
+  setInterval(routine, 4500);
   setInterval(metrics, 2000);
   setTimeout(ambient, 600);
 })();
