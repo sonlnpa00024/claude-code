@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ban điều hành AI Agents</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #05080a;
+    --panel: #0a1110;
+    --panel-2: #0d1715;
+    --border: #16302a;
+    --border-hi: #1f4a3f;
+    --text: #e6f2ee;
+    --muted: #7d948d;
+    --dim: #4a5f59;
+    --accent: #2ff59a;
+    --accent-dim: rgba(47, 245, 154, 0.14);
+    --amber: #f5c542;
+    --red: #ff4d5e;
+    --font: 'Be Vietnam Pro', system-ui, sans-serif;
+    --mono: 'JetBrains Mono', ui-monospace, monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: var(--bg); color: var(--text); font-family: var(--font); }
+  body {
+    min-height: 100vh;
+    background-image:
+      radial-gradient(ellipse at 50% -10%, rgba(47,245,154,0.08), transparent 55%),
+      linear-gradient(rgba(47,245,154,0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(47,245,154,0.025) 1px, transparent 1px);
+    background-size: 100% 100%, 32px 32px, 32px 32px;
+  }
+  .app { max-width: 1600px; margin: 0 auto; padding: 16px; }
+
+  /* Header */
+  header { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-bottom: 16px; }
+  .logo { font-weight: 800; font-size: 22px; letter-spacing: -0.5px; line-height: 1.4; }
+  .logo span { color: var(--accent); }
+  .subtitle { font-size: 10px; letter-spacing: 3px; color: var(--muted); text-transform: uppercase; }
+  .pills { margin-left: auto; display: flex; gap: 8px; flex-wrap: wrap; }
+  .pill {
+    font-size: 12px; padding: 6px 12px; border-radius: 999px;
+    background: var(--panel); border: 1px solid var(--border); white-space: nowrap;
+  }
+  .pill b { color: var(--accent); font-weight: 700; }
+  .pill.live { border-color: rgba(255,77,94,0.5); background: rgba(255,77,94,0.08); font-family: var(--mono); }
+  .dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); margin-right: 6px; vertical-align: 1px; box-shadow: 0 0 8px var(--accent); }
+  .pill.live .dot { background: var(--red); box-shadow: 0 0 8px var(--red); animation: blink 1.2s infinite; }
+  @keyframes blink { 50% { opacity: 0.3; } }
+
+  .pill.sim { border-color: rgba(245,197,66,0.45); background: rgba(245,197,66,0.08); color: var(--amber); font-weight: 700; }
+
+  /* Bàn làm việc Đại trưởng lão */
+  .dtl-card { border-color: rgba(245,197,66,0.35); }
+  .dtl-card .card-title .hi { color: var(--amber); }
+  .dtl-now { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px; background: rgba(245,197,66,0.07); border: 1px solid rgba(245,197,66,0.25); font-size: 13px; margin-bottom: 10px; }
+  .dtl-now .who { width: 30px; height: 30px; flex: none; border-radius: 50%; background: var(--amber); color: #05080a; display: grid; place-items: center; font-size: 10px; font-weight: 800; }
+  .dtl-now b { color: var(--amber); }
+  .dtl-stats { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 8px; margin-bottom: 10px; }
+  .dtl-stat { background: rgba(0,0,0,0.25); border: 1px solid var(--border); border-radius: 10px; padding: 8px 10px; }
+  .dtl-stat .v { font-size: 20px; font-weight: 800; font-variant-numeric: tabular-nums; }
+  .dtl-stat .l { font-size: 10px; color: var(--muted); }
+  .dtl-stat.warn .v { color: var(--amber); }
+  .dtl-grid { display: grid; grid-template-columns: minmax(0,1.35fr) minmax(0,1fr); gap: 10px; }
+  .dtl-list { background: rgba(0,0,0,0.25); border: 1px solid var(--border); border-radius: 10px; padding: 4px 10px; min-height: 240px; }
+  .dtl-item:last-child { border-bottom: none; }
+  .dtl-item { display: grid; grid-template-columns: 38px minmax(0,1fr) auto; gap: 6px; align-items: center; font-size: 12px; padding: 6px 0; border-bottom: 1px solid rgba(22,48,42,0.6); line-height: 1.35; }
+  .dtl-item.fresh { animation: pop .35s ease-out; }
+  .dtl-item time { color: var(--muted); font-family: var(--mono); font-size: 11px; }
+  .dtl-item b { color: var(--accent); }
+  .dtl-item .txt { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .badge { font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 999px; white-space: nowrap; }
+  .badge.pending { background: rgba(245,197,66,0.15); color: var(--amber); }
+  .badge.reviewing { background: var(--amber); color: #05080a; }
+  .badge.approved { background: var(--accent-dim); color: var(--accent); }
+  .badge.info { background: rgba(125,148,141,0.12); color: var(--muted); }
+  .approve { font: 700 10px var(--font); padding: 3px 9px; border-radius: 999px; border: 1px solid var(--amber); background: none; color: var(--amber); cursor: pointer; }
+  .approve:hover { background: var(--amber); color: #05080a; }
+
+  /* Layout */
+  .grid { display: grid; grid-template-columns: 280px minmax(0, 1fr) 330px; gap: 14px; }
+  .col { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+  .card {
+    background: linear-gradient(180deg, var(--panel-2), var(--panel));
+    border: 1px solid var(--border); border-radius: 14px; padding: 14px;
+    box-shadow: 0 0 30px rgba(47,245,154,0.03), inset 0 1px 0 rgba(255,255,255,0.02);
+  }
+  .card-title {
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--muted);
+    margin-bottom: 12px;
+  }
+  .card-title .hi { color: var(--accent); }
+
+  /* Agent list */
+  #agent-list { max-height: 1010px; overflow-y: auto; margin-right: -6px; padding-right: 6px; }
+  #agent-list::-webkit-scrollbar { width: 5px; }
+  #agent-list::-webkit-scrollbar-thumb { background: var(--border-hi); border-radius: 3px; }
+  .group-head { font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--accent); opacity: .8; padding: 10px 4px 4px; border-top: 1px solid var(--border); margin-top: 4px; }
+  .group-head:first-child { border-top: none; margin-top: 0; padding-top: 0; }
+  .agent-row { display: grid; grid-template-columns: 30px 1fr auto; gap: 10px; align-items: center; padding: 7px 4px; border-radius: 8px; transition: background .3s; }
+  .agent-row.flash { background: var(--accent-dim); }
+  .avatar { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; font-size: 10px; font-weight: 800; color: #05080a; }
+  .agent-name { font-size: 13px; font-weight: 600; }
+  .agent-act { font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 150px; }
+  .status {
+    font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 999px; white-space: nowrap;
+    background: rgba(125,148,141,0.12); color: var(--muted);
+  }
+  .status.working { background: var(--accent); color: #05080a; box-shadow: 0 0 10px rgba(47,245,154,0.4); }
+  .status.review { background: rgba(245,197,66,0.15); color: var(--amber); }
+
+  /* Office */
+  .office { position: relative; padding: 10px 10px 0; }
+  .office svg { width: 100%; height: auto; display: block; }
+  .live-tag { color: var(--accent); font-weight: 700; }
+  .fig { transform-box: fill-box; }
+  .agent-g.working .fig { animation: bob 0.9s ease-in-out infinite; }
+  @keyframes bob { 50% { transform: translateY(-2px); } }
+  .ring { transition: opacity .3s; }
+  .agent-g.working .ring { animation: pulse 1.6s ease-in-out infinite; }
+  @keyframes pulse { 50% { opacity: 0.35; } }
+  .arc { fill: none; stroke: var(--accent); stroke-width: 2; stroke-dasharray: 6 6; animation: dash 0.6s linear infinite; filter: drop-shadow(0 0 4px rgba(47,245,154,0.7)); }
+  @keyframes dash { to { stroke-dashoffset: -12; } }
+  .arc-g { transition: opacity .5s; }
+  .bubble rect { fill: #0c2a1f; stroke: var(--accent); stroke-width: 1.2; }
+  .bubble text { fill: var(--accent); font: 700 11px var(--font); }
+  .room-label { font: 700 10px var(--font); letter-spacing: 2px; fill: rgba(200,255,230,0.55); text-transform: uppercase; }
+  .tag text { font: 700 9px var(--font); fill: #fff; }
+  .agent-g { cursor: default; }
+
+  /* Kanban */
+  .board { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 10px; }
+  .lane { background: rgba(0,0,0,0.25); border: 1px solid var(--border); border-radius: 10px; padding: 8px; min-height: 150px; }
+  .lane-head { display: flex; justify-content: space-between; font-size: 10px; letter-spacing: 1.5px; font-weight: 700; color: var(--muted); margin-bottom: 8px; padding: 0 2px; }
+  .task {
+    background: #0b1d18; border: 1px solid var(--border-hi); border-radius: 8px; padding: 7px 9px; margin-bottom: 6px;
+    animation: pop .35s ease-out;
+  }
+  .task.new { border-color: var(--accent); box-shadow: 0 0 12px rgba(47,245,154,0.25); }
+  .task-title { font-size: 12px; font-weight: 600; line-height: 1.3; }
+  .task-agent { font-size: 10px; color: var(--accent); margin-top: 2px; }
+  .more { font-size: 10px; color: var(--muted); text-align: center; padding-top: 2px; }
+  @keyframes pop { from { opacity: 0; transform: translateY(-4px); } }
+
+  /* Command */
+  .cmd { display: flex; gap: 10px; align-items: center; padding: 8px 8px 8px 16px; }
+  .cmd .prompt { color: var(--accent); font-family: var(--mono); font-weight: 600; }
+  .cmd input {
+    flex: 1; min-width: 0; background: transparent; border: none; outline: none; color: var(--text);
+    font: 500 16px var(--font);
+  }
+  .cmd input::placeholder { color: var(--dim); }
+  .cmd button {
+    background: var(--accent); color: #04140d; border: none; border-radius: 10px; padding: 11px 18px;
+    font: 800 14px var(--font); cursor: pointer; white-space: nowrap; box-shadow: 0 0 18px rgba(47,245,154,0.35);
+  }
+  .cmd button:hover { filter: brightness(1.08); }
+  .chips { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+  .chip { font-size: 11px; color: var(--muted); border: 1px dashed var(--border-hi); border-radius: 999px; padding: 4px 10px; cursor: pointer; background: none; font-family: var(--font); }
+  .chip:hover { color: var(--accent); border-color: var(--accent); }
+
+  /* KPIs */
+  .kpis { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .kpi { padding: 12px 14px; }
+  .kpi-label { font-size: 11px; color: var(--muted); }
+  .kpi-value { font-size: 28px; font-weight: 800; letter-spacing: -1px; margin: 2px 0; font-variant-numeric: tabular-nums; }
+  .kpi-sub { font-size: 11px; color: var(--accent); font-weight: 600; }
+  .chart svg { width: 100%; height: 130px; display: block; }
+
+  /* Feed */
+  .feed { max-height: 360px; overflow: hidden; }
+  .msg { display: grid; grid-template-columns: 38px 1fr; gap: 6px; font-size: 12px; padding: 7px 0; border-bottom: 1px solid rgba(22,48,42,0.6); line-height: 1.4; animation: pop .35s ease-out; }
+  .msg time { color: var(--muted); font-family: var(--mono); font-size: 11px; }
+  .msg b { color: var(--accent); font-weight: 700; }
+
+  footer { text-align: center; color: var(--dim); font-size: 11px; padding: 20px 0 8px; }
+
+  @media (max-width: 1200px) {
+    .grid { grid-template-columns: 240px minmax(0,1fr); }
+    .col.right { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1fr; }
+  }
+  @media (max-width: 760px) {
+    .app { padding: 12px; }
+    .grid { grid-template-columns: minmax(0,1fr); }
+    .col.left { order: 2; }
+    .col.right { order: 3; grid-template-columns: minmax(0,1fr); }
+    .board { grid-template-columns: repeat(2, minmax(0,1fr)); }
+    .pills { margin-left: 0; }
+    .kpi-value { font-size: 24px; }
+    .dtl-grid { grid-template-columns: minmax(0,1fr); }
+    .dtl-stats { grid-template-columns: repeat(2, minmax(0,1fr)); }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div>
+      <div class="logo">Ban điều hành <span>AI Agents</span></div>
+    </div>
+    <div class="pills">
+      <div class="pill"><span class="dot"></span><b id="h-running">–</b> lão đang chạy</div>
+      <div class="pill">Việc trong hàng đợi: <b id="h-queue">0</b></div>
+      <div class="pill">Chi phí AI hôm nay: <b id="h-cost">1,85 USD</b></div>
+      <div class="pill sim" title="Số liệu và hoạt động trên trang là giả lập, chưa nối với các lão thật">Chế độ mô phỏng</div>
+      <div class="pill live"><span class="dot"></span>LIVE <span id="h-clock">--:--:--</span></div>
+    </div>
+  </header>
+
+  <div class="grid">
+    <!-- LEFT: agents -->
+    <aside class="col left">
+      <div class="card">
+        <div class="card-title">Đội Lão <span class="hi" id="online-count"></span></div>
+        <div id="agent-list"></div>
+      </div>
+    </aside>
+
+    <!-- CENTER: office + board + command -->
+    <main class="col">
+      <div class="card office">
+        <div class="card-title" style="padding:4px 4px 0">Văn phòng AI Agents · Trực tiếp <span class="live-tag"><span class="dot"></span>LIVE</span></div>
+        <svg id="office" aria-label="Văn phòng các lão, nhìn chéo"></svg>
+      </div>
+
+      <div class="card" style="padding:10px">
+        <form class="cmd" id="cmd-form" autocomplete="off">
+          <span class="prompt">&gt;_</span>
+          <input id="cmd-input" placeholder="Giao việc cho Đại trưởng lão..." />
+          <button type="submit" id="cmd-btn">Giao việc ↵</button>
+        </form>
+        <div class="chips" style="padding:0 8px 4px">
+          <button class="chip" type="button">Nhập hàng xe a Vinh hôm nay</button>
+          <button class="chip" type="button">Kiểm kê kho cuối tháng</button>
+          <button class="chip" type="button">Xử lý đơn khách Cty có VAT</button>
+          <button class="chip" type="button">Chấm công tháng 10</button>
+        </div>
+      </div>
+
+      <div class="card dtl-card">
+        <div class="card-title">Bàn làm việc Đại trưởng lão <span class="hi">ĐIỀU HÀNH</span></div>
+        <div class="dtl-now"><div class="who">ĐT</div><div id="dtl-now">Đang theo dõi các lão</div></div>
+        <div class="dtl-stats">
+          <div class="dtl-stat"><div class="v" id="ds-assigned">0</div><div class="l">Việc đã giao hôm nay</div></div>
+          <div class="dtl-stat"><div class="v" id="ds-reports">0</div><div class="l">Báo cáo đã nhận</div></div>
+          <div class="dtl-stat warn"><div class="v" id="ds-pending">0</div><div class="l">Chờ duyệt</div></div>
+          <div class="dtl-stat"><div class="v" id="ds-approved">0</div><div class="l">Đã duyệt</div></div>
+        </div>
+        <div class="dtl-grid">
+          <div>
+            <div class="card-title" style="margin-bottom:6px">Báo cáo các lão gửi lên</div>
+            <div class="dtl-list" id="dtl-inbox"></div>
+          </div>
+          <div>
+            <div class="card-title" style="margin-bottom:6px">Lệnh đã giao</div>
+            <div class="dtl-list" id="dtl-orders"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Bảng công việc <span class="hi" id="campaign"></span></div>
+        <div class="board">
+          <div class="lane"><div class="lane-head">HÀNG ĐỢI <span id="c-queue">0</span></div><div id="l-queue"></div></div>
+          <div class="lane"><div class="lane-head">ĐANG LÀM <span id="c-doing">0</span></div><div id="l-doing"></div></div>
+          <div class="lane"><div class="lane-head">REVIEW <span id="c-review">0</span></div><div id="l-review"></div></div>
+          <div class="lane"><div class="lane-head">XONG <span id="c-done">0</span></div><div id="l-done"></div></div>
+        </div>
+      </div>
+
+    </main>
+
+    <!-- RIGHT: KPIs, chart, feed -->
+    <aside class="col right">
+      <div class="kpis">
+        <div class="card kpi"><div class="kpi-label">Đơn đã nhập hôm nay</div><div class="kpi-value" id="k-orders">486</div><div class="kpi-sub">+12% so với hôm qua</div></div>
+        <div class="card kpi"><div class="kpi-label">Lô hàng đã kiểm</div><div class="kpi-value" id="k-rev">37</div><div class="kpi-sub">lệch 0,4%</div></div>
+        <div class="card kpi"><div class="kpi-label">Đơn Cty / VAT</div><div class="kpi-value" id="k-msg">64</div><div class="kpi-sub">đã xuất hoá đơn</div></div>
+        <div class="card kpi"><div class="kpi-label">Việc đã xong</div><div class="kpi-value" id="k-done">1.883</div><div class="kpi-sub">0 việc trễ hạn</div></div>
+      </div>
+      <div class="card chart">
+        <div class="card-title">Đơn nhập / phút <span class="hi" id="opm">22 ĐƠN</span></div>
+        <svg id="spark" viewBox="0 0 300 130" preserveAspectRatio="none"></svg>
+      </div>
+      <div class="card">
+        <div class="card-title">Luồng tin giữa các lão <span class="hi">LIVE</span></div>
+        <div class="feed" id="feed"></div>
+      </div>
+    </aside>
+  </div>
+
+  <footer>Ban điều hành AI Agents · đang chạy dữ liệu mô phỏng, chưa nối với các lão thật</footer>
+</div>
+
+<script>
+(() => {
+  // ---------- Data ----------
+  // Phòng: toạ độ (x, y) và kích thước (w, d) theo đơn vị iso; cols = số bàn mỗi hàng
+  const ROOMS = [
+    { id: 'gs', name: 'Phòng Giám sát',            x: 0,    y: 0,  w: 10.5, d: 10.5, cols: 3, hue: 165, floor: ['#12302a', '#0e2621'] },
+    { id: 'nl', name: 'Phòng Nhập liệu, chứng từ', x: 12,   y: 0,  w: 14,   d: 10.5, cols: 4, hue: 215, floor: ['#1a2758', '#141f47'] },
+    { id: 'dh', name: 'Phòng Điều hành', short: 'Điều hành', x: 0,    y: 12, w: 5.5,  d: 6.5,  cols: 1, hue: 45,  floor: ['#35221a', '#2a1a13'] },
+    { id: 'xd', name: 'Phòng Xử lý đơn',           x: 7,    y: 12, w: 11,   d: 6.5,  cols: 3, hue: 22,  floor: ['#3a2416', '#2e1c12'] },
+    { id: 'ns', name: 'Phòng Nhân sự',             x: 19.5, y: 12, w: 6.5,  d: 6.5,  cols: 2, hue: 320, floor: ['#3a1a33', '#2d1428'] },
+  ];
+  const roomById = Object.fromEntries(ROOMS.map(r => [r.id, r]));
+  const AGENTS = [
+    { id: 'dtl', name: 'Đại trưởng lão', role: 'Điều phối toàn đội',          room: 'dh' },
+    { id: 'l2',  name: 'Lão 2',  role: 'Kiểm hàng',                          room: 'gs' },
+    { id: 'l3',  name: 'Lão 3',  role: 'Chỉnh giá vốn',                      room: 'gs' },
+    { id: 'l4',  name: 'Lão 4',  role: 'Tạo công việc kiểm hàng',            room: 'gs' },
+    { id: 'l5',  name: 'Lão 5',  role: 'Trả hàng lỗi',                       room: 'gs' },
+    { id: 'l22', name: 'Lão 22', role: 'Cập nhật giá đơn vị quy đổi',        room: 'gs' },
+    { id: 'l6',  name: 'Lão 6',  role: 'Check hàng về xe a Vinh',            room: 'nl' },
+    { id: 'l7',  name: 'Lão 7',  role: 'Đặt hàng NSX',                       room: 'nl' },
+    { id: 'l11', name: 'Lão 11', role: 'Nhập đơn - Tiến Đức',                room: 'nl' },
+    { id: 'l12', name: 'Lão 12', role: 'Nhập đơn - Nga Bình',                room: 'nl' },
+    { id: 'l13', name: 'Lão 13', role: 'Nhập đơn - Chai Ngọc Nam. A Tú',     room: 'nl' },
+    { id: 'l14', name: 'Lão 14', role: 'Nhập đơn - Băng dính. A Quang',      room: 'nl' },
+    { id: 'l15', name: 'Lão 15', role: 'Nhập đơn - Xe A Vinh',               room: 'nl' },
+    { id: 'l16', name: 'Lão 16', role: 'Nhập đơn - Tuấn Minh',               room: 'nl' },
+    { id: 'l17', name: 'Lão 17', role: 'Nhập đơn - Xe Thanh Sơn',            room: 'nl' },
+    { id: 'l18', name: 'Lão 18', role: 'Nhập đơn - Gift',                    room: 'nl' },
+    { id: 'l21', name: 'Lão 21', role: 'Huỷ đơn hàng',                       room: 'nl' },
+    { id: 'l24', name: 'Lão 24', role: 'Nhập hàng - Long Anh',               room: 'nl' },
+    { id: 'l8',  name: 'Lão 8',  role: 'Tạo đơn VAT khách Cty',              room: 'xd' },
+    { id: 'l9',  name: 'Lão 9',  role: 'Tạo đơn sapo Cty',                   room: 'xd' },
+    { id: 'l10', name: 'Lão 10', role: 'Tạo đơn Random',                     room: 'xd' },
+    { id: 'l19', name: 'Lão 19', role: 'Cập nhật công',                      room: 'ns' },
+    { id: 'l20', name: 'Lão 20', role: 'Tạo TK chấm công cho NV',            room: 'ns' },
+  ];
+  // Màu: mỗi phòng một tông, lệch sắc độ nhẹ giữa các lão; vị trí bàn tự xếp theo lưới
+  const CELL = 3.4;
+  for (const r of ROOMS) {
+    const members = AGENTS.filter(a => a.room === r.id);
+    const rows = Math.ceil(members.length / r.cols);
+    const sx = (r.w - (r.cols * CELL - 1)) / 2, sy = (r.d - rows * CELL) / 2 + 0.2;
+    members.forEach((a, i) => {
+      a.color = a.id === 'dtl' ? '#f5c542' : `hsl(${r.hue + (i - members.length / 2) * 9}, 78%, 62%)`;
+      a.dx = r.x + sx + (i % r.cols) * CELL;
+      a.dy = r.y + sy + Math.floor(i / r.cols) * CELL;
+    });
+  }
+  const byId = Object.fromEntries(AGENTS.map(a => [a.id, a]));
+
+  const AMBIENT = [
+    ['l6', 'l15', 'xe a Vinh về đủ 32 kiện', 'Hàng về'],
+    ['l15', 'l2', 'đã nhập đơn xe a Vinh, nhờ kiểm', 'Nhờ kiểm'],
+    ['l2', 'l3', 'lô 1102 lệch 2 SP, xem lại giá vốn', 'Kết quả'],
+    ['l24', 'l3', 'nhập hàng Long Anh xong, cập nhật giá vốn', 'Gửi số liệu'],
+    ['l8', 'l9', 'khách Cty cần xuất VAT, tạo đơn sapo', 'Đơn mới'],
+    ['l9', 'dtl', 'đã tạo 6 đơn sapo Cty', 'Báo cáo'],
+    ['l21', 'l5', 'huỷ đơn #2231, chuyển trả hàng lỗi', 'Chuyển việc'],
+    ['l5', 'l7', '3 SP lỗi, báo NSX đổi trả', 'Báo NSX'],
+    ['l7', 'l6', 'đã đặt 3 đơn NSX, chờ xe về', 'Đặt hàng'],
+    ['l22', 'l3', 'cập nhật quy đổi thùng/chai 12 mã', 'Gửi số liệu'],
+    ['l19', 'l20', 'có 2 NV mới cần tài khoản chấm công', 'Việc mới'],
+    ['l20', 'dtl', 'đã tạo TK chấm công cho 2 NV', 'Báo cáo'],
+    ['l10', 'l18', 'đơn random kèm quà, chuyển Gift', 'Chuyển việc'],
+    ['l4', 'l2', 'tạo phiếu kiểm hàng ca chiều', 'Việc mới'],
+    ['l11', 'l2', 'nhập xong đơn Tiến Đức, nhờ kiểm', 'Nhờ kiểm'],
+    ['l12', 'l2', 'nhập xong đơn Nga Bình', 'Nhờ kiểm'],
+    ['l13', 'l2', 'nhập xong đơn chai Ngọc Nam', 'Nhờ kiểm'],
+    ['l14', 'l2', 'nhập xong đơn băng dính a Quang', 'Nhờ kiểm'],
+    ['l16', 'l2', 'nhập xong đơn Tuấn Minh', 'Nhờ kiểm'],
+    ['l17', 'l2', 'xe Thanh Sơn đã nhập đơn', 'Nhờ kiểm'],
+    ['l3', 'dtl', 'đã chỉnh giá vốn 14 mã', 'Báo cáo'],
+  ];
+  const ROUTINE = [
+    ['Kiểm lô hàng mới về', 'l2'], ['Chỉnh giá vốn 8 mã', 'l3'], ['Tạo phiếu kiểm hàng', 'l4'], ['Lập phiếu trả 3 SP lỗi', 'l5'],
+    ['Check hàng xe a Vinh', 'l6'], ['Đặt đơn NSX tuần', 'l7'], ['Tạo đơn VAT khách Cty', 'l8'], ['Tạo 4 đơn sapo Cty', 'l9'],
+    ['Tạo đơn random', 'l10'], ['Nhập đơn Tiến Đức', 'l11'], ['Nhập đơn Nga Bình', 'l12'], ['Nhập đơn chai Ngọc Nam', 'l13'],
+    ['Nhập đơn băng dính a Quang', 'l14'], ['Nhập đơn xe a Vinh', 'l15'], ['Nhập đơn Tuấn Minh', 'l16'], ['Nhập đơn xe Thanh Sơn', 'l17'],
+    ['Nhập đơn Gift', 'l18'], ['Cập nhật công ngày', 'l19'], ['Tạo TK chấm công NV mới', 'l20'], ['Huỷ đơn khách báo huỷ', 'l21'],
+    ['Cập nhật quy đổi thùng/chai', 'l22'], ['Nhập hàng Long Anh', 'l24'],
+  ];
+  const PLANS = [
+    { re: /chấm công|nhân viên|bảng công|\bcông tháng/i, tasks: [
+      ['Tạo TK chấm công NV mới', 'l20'], ['Cập nhật công tháng', 'l19']] },
+    { re: /kiểm kê|kiểm hàng|tồn kho|\btồn\b/i, tasks: [
+      ['Tạo công việc kiểm kê', 'l4'], ['Kiểm hàng toàn kho', 'l2'], ['Rà quy đổi đơn vị', 'l22'],
+      ['Chỉnh giá vốn sau kiểm', 'l3'], ['Gom hàng lỗi để trả', 'l5']] },
+    { re: /hàng về|nhập hàng|\bxe\b/i, tasks: [
+      ['Check hàng về xe a Vinh', 'l6'], ['Nhập đơn xe a Vinh', 'l15'], ['Nhập đơn xe Thanh Sơn', 'l17'],
+      ['Nhập hàng Long Anh', 'l24'], ['Kiểm hàng vừa về', 'l2'], ['Chỉnh giá vốn lô mới', 'l3']] },
+    { re: /đơn|vat|cty|công ty|khách/i, tasks: [
+      ['Tạo đơn VAT khách Cty', 'l8'], ['Tạo đơn sapo Cty', 'l9'], ['Tạo đơn random', 'l10'], ['Huỷ đơn trùng', 'l21']] },
+  ];
+  const FALLBACK = [['Tạo công việc kiểm', 'l4'], ['Kiểm hàng', 'l2'], ['Tạo đơn sapo Cty', 'l9'], ['Cập nhật công', 'l19']];
+
+  // ---------- Isometric helpers ----------
+  const S = 16, COS = 0.866;
+  const iso = (x, y, z = 0) => [(x - y) * COS * S, (x + y) * 0.5 * S - z * S];
+  const pts = arr => arr.map(p => iso(...p).map(n => n.toFixed(1)).join(',')).join(' ');
+  const NS = 'http://www.w3.org/2000/svg';
+  const el = (tag, attrs = {}, parent) => {
+    const e = document.createElementNS(NS, tag);
+    for (const k in attrs) e.setAttribute(k, attrs[k]);
+    if (parent) parent.appendChild(e);
+    return e;
+  };
+  function box(parent, x, y, z, w, d, h, top, left, right) {
+    const g = el('g', {}, parent);
+    el('polygon', { points: pts([[x, y + d, z], [x + w, y + d, z], [x + w, y + d, z + h], [x, y + d, z + h]]), fill: left }, g);
+    el('polygon', { points: pts([[x + w, y, z], [x + w, y + d, z], [x + w, y + d, z + h], [x + w, y, z + h]]), fill: right }, g);
+    el('polygon', { points: pts([[x, y, z + h], [x + w, y, z + h], [x + w, y + d, z + h], [x, y + d, z + h]]), fill: top }, g);
+    return g;
+  }
+
+  // ---------- Build office ----------
+  const svg = document.getElementById('office');
+  {
+    const xs = [], ys = [];
+    for (const r of ROOMS) for (const [cx, cy] of [[r.x, r.y], [r.x + r.w, r.y], [r.x, r.y + r.d], [r.x + r.w, r.y + r.d]])
+      for (const z of [-0.5, 2.6]) { const [a, b] = iso(cx, cy, z); xs.push(a); ys.push(b); }
+    const minX = Math.min(...xs) - 16, maxX = Math.max(...xs) + 16, minY = Math.min(...ys) - 40, maxY = Math.max(...ys) + 40;
+    svg.setAttribute('viewBox', `${minX.toFixed(0)} ${minY.toFixed(0)} ${(maxX - minX).toFixed(0)} ${(maxY - minY).toFixed(0)}`);
+  }
+  const defs = el('defs', {}, svg);
+  const glow = el('filter', { id: 'glow', x: '-50%', y: '-50%', width: '200%', height: '200%' }, defs);
+  el('feGaussianBlur', { stdDeviation: 3, result: 'b' }, glow);
+  const fm = el('feMerge', {}, glow); el('feMergeNode', { in: 'b' }, fm); el('feMergeNode', { in: 'SourceGraphic' }, fm);
+
+  const sceneLayer = el('g', {}, svg);
+  const arcLayer = el('g', {}, svg);
+  const agentEls = {};
+
+  const drawOrder = [...ROOMS].sort((a, b) => (a.x + a.y + (a.w + a.d) / 2) - (b.x + b.y + (b.w + b.d) / 2));
+  for (const r of drawOrder) {
+    const { x: ox, y: oy, w: W, d: D } = r;
+    const g = el('g', {}, sceneLayer);
+    el('polygon', { points: pts([[ox - 0.6, oy - 0.6, -0.9], [ox + W + 0.6, oy - 0.6, -0.9], [ox + W + 0.6, oy + D + 0.6, -0.9], [ox - 0.6, oy + D + 0.6, -0.9]]), fill: '#030606', opacity: 0.85 }, g);
+    box(g, ox, oy, -0.5, W, D, 0.5, r.floor[0], '#0b1512', '#0f1c18');
+    const TL = 1.5;
+    for (let i = 0; i < W - 0.01; i += TL) for (let j = 0; j < D - 0.01; j += TL) {
+      if ((Math.round(i / TL) + Math.round(j / TL)) % 2 === 0) continue;
+      const iw = Math.min(TL, W - i), jd = Math.min(TL, D - j);
+      el('polygon', { points: pts([[ox + i, oy + j, 0], [ox + i + iw, oy + j, 0], [ox + i + iw, oy + j + jd, 0], [ox + i, oy + j + jd, 0]]), fill: r.floor[1] }, g);
+    }
+    const H = 2.4, wallStyle = { fill: 'rgba(120,255,190,0.045)', stroke: 'rgba(120,255,190,0.28)', 'stroke-width': 1 };
+    el('polygon', { points: pts([[ox, oy, 0], [ox + W, oy, 0], [ox + W, oy, H], [ox, oy, H]]), ...wallStyle }, g);
+    el('polygon', { points: pts([[ox, oy, 0], [ox, oy + D, 0], [ox, oy + D, H], [ox, oy, H]]), ...wallStyle }, g);
+    el('polyline', { points: pts([[ox, oy + D, 0.6], [ox + W, oy + D, 0.6], [ox + W, oy, 0.6]]), fill: 'none', stroke: 'rgba(120,255,190,0.22)', 'stroke-width': 1 }, g);
+    el('polyline', { points: pts([[ox, oy + D, 0], [ox + W, oy + D, 0], [ox + W, oy, 0]]), fill: 'none', stroke: 'rgba(120,255,190,0.35)', 'stroke-width': 1.2 }, g);
+    // hàng trên: tên phòng trên vách sau; hàng dưới: tên phòng dưới mép trước (tránh đè phòng khác)
+    const front = oy > 0;
+    let [lx, ly] = front ? iso(ox + 0.4, oy + D, -0.5) : iso(ox + 0.4, oy, H + 0.3);
+    if (front) { lx -= 6; ly += 15; }
+    const t = el('text', { x: lx, y: ly, class: 'room-label', transform: `rotate(30 ${lx} ${ly})` }, g);
+    t.textContent = r.short || r.name;
+    box(g, ox + W - 0.8, oy + D - 0.8, 0, 0.5, 0.5, 0.5, '#6b4a2b', '#4a321d', '#5a3d24');
+    const [px, py] = iso(ox + W - 0.55, oy + D - 0.55, 1.05);
+    el('circle', { cx: px, cy: py, r: 5.5, fill: '#2f7d4a' }, g);
+
+    const inRoom = AGENTS.filter(a => a.room === r.id).sort((a, b) => (a.dx + a.dy) - (b.dx + b.dy));
+    for (const a of inRoom) {
+      const { dx, dy } = a, boss = a.id === 'dtl';
+      const ag = el('g', { class: 'agent-g' }, g);
+      el('title', {}, ag).textContent = boss ? a.name : `${a.name} – ${a.role}`;
+      box(ag, dx, dy, 0, 2.4, 1.1, 0.9, boss ? '#d9b46a' : '#c9a77a', '#7d6243', '#9a7953');
+      box(ag, dx + 0.4, dy + 0.15, 0.9, 1.6, 0.15, 0.75, '#1d3b30', boss ? '#f5c542' : '#2ff59a', boss ? '#a8862e' : '#1a8f5c');
+      const ax = dx + 1.2, ay = dy + 2.1;
+      const [rx, ry] = iso(ax, ay, 0);
+      el('ellipse', { cx: rx, cy: ry, rx: boss ? 18 : 14, ry: boss ? 9 : 7, fill: 'none', stroke: boss ? '#f5c542' : '#2ff59a', 'stroke-width': 1.5, class: 'ring', opacity: 0.7 }, ag);
+      const fig = el('g', { class: 'fig' }, ag);
+      const [bx, by] = iso(ax, ay, 0.75);
+      el('ellipse', { cx: rx, cy: ry - 1, rx: 7, ry: 3, fill: 'rgba(0,0,0,0.45)' }, fig);
+      el('rect', { x: bx - 7, y: by - 9, width: 14, height: 18, rx: 6, fill: a.color }, fig);
+      const [hx, hy] = iso(ax, ay, 1.85);
+      el('circle', { cx: hx, cy: hy, r: 6.5, fill: '#f4f7f6' }, fig);
+      const tag = el('g', { class: 'tag' }, ag);
+      const w = a.name.length * 5.4 + 12;
+      el('rect', { x: hx - w / 2, y: hy - 24, width: w, height: 14, rx: 4, fill: boss ? 'rgba(120,90,10,0.85)' : 'rgba(0,0,0,0.6)' }, tag);
+      const tt = el('text', { x: hx, y: hy - 14, 'text-anchor': 'middle' }, tag); tt.textContent = a.name;
+      agentEls[a.id] = { g: ag, head: [hx, hy - 4] };
+    }
+  }
+
+  // ---------- State ----------
+  const dtl = { assigned: 142, reports: 131, approved: 118, inbox: [], orders: [], current: null, ver: 0, nextId: 1 };
+  const state = {
+    tasks: [], nextId: 1, cost: 1.85,
+    orders: 486, lots: 37, cty: 64, done: 1883,
+    series: Array.from({ length: 40 }, (_, i) => 22 + Math.sin(i / 3) * 4 + Math.random() * 4),
+    campaign: null,
+  };
+  const now = () => Date.now();
+  const rand = (a, b) => a + Math.random() * (b - a);
+  const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+  const fmt = n => Math.round(n).toLocaleString('vi-VN');
+  const hhmm = () => new Date().toTimeString().slice(0, 5);
+
+  function addTask(title, agent, status = 'queue', campaign = null) {
+    const t = { id: state.nextId++, title, agent, status, since: now(), dur: rand(4000, 9000), campaign, fresh: now() };
+    state.tasks.push(t);
+    return t;
+  }
+  [['Kiểm lô hàng 1102', 'l2', 'done'], ['Nhập đơn Tiến Đức', 'l11', 'done'],
+   ['Chỉnh giá vốn 14 mã', 'l3', 'review'], ['Tạo đơn sapo Cty', 'l9', 'review'],
+   ['Nhập đơn xe a Vinh', 'l15', 'doing'], ['Cập nhật công ngày', 'l19', 'doing']].forEach(([t, a, s]) => { const x = addTask(t, a, s); x.fresh = 0; });
+
+  // ---------- Rendering ----------
+  const $ = id => document.getElementById(id);
+  const listEl = $('agent-list');
+  const rowEls = {};
+  for (const r of [roomById.dh, roomById.gs, roomById.nl, roomById.xd, roomById.ns]) {
+    const head = document.createElement('div');
+    head.className = 'group-head';
+    head.textContent = r.name;
+    listEl.appendChild(head);
+    for (const a of AGENTS.filter(x => x.room === r.id)) {
+      const row = document.createElement('div');
+      row.className = 'agent-row';
+      row.title = a.id === 'dtl' ? a.name : `${a.name} – ${a.role}`;
+      const initials = a.id === 'dtl' ? 'ĐT' : a.name.replace('Lão ', '');
+      row.innerHTML = `<div class="avatar" style="background:${a.color}">${initials}</div>
+        <div style="min-width:0"><div class="agent-name">${a.name}</div><div class="agent-act"></div></div>
+        <span class="status"></span>`;
+      listEl.appendChild(row);
+      rowEls[a.id] = row;
+    }
+  }
+
+  function agentStatus(id) {
+    const ts = state.tasks.filter(t => t.agent === id);
+    const doing = ts.find(t => t.status === 'doing');
+    if (doing) return ['working', 'Đang làm', doing.title];
+    if (id === 'dtl') return dtl.current ? ['working', 'Đang duyệt', `Duyệt: ${dtl.current.task ? dtl.current.task.title : dtl.current.text}`] : ['working', 'Điều phối', byId[id].role];
+    const rev = ts.find(t => t.status === 'review');
+    if (rev) return ['review', 'Chờ duyệt', rev.title];
+    return ['', 'Trực', byId[id].role];
+  }
+
+  function renderAgents() {
+    for (const a of AGENTS) {
+      const [cls, label, act] = agentStatus(a.id);
+      const row = rowEls[a.id];
+      const st = row.querySelector('.status');
+      st.className = 'status ' + cls; st.textContent = label;
+      row.querySelector('.agent-act').textContent = act;
+      agentEls[a.id].g.classList.toggle('working', cls === 'working' || a.id === 'dtl');
+    }
+  }
+
+  const laneSig = {}, shown = new Set();
+  function renderBoard() {
+    const lanes = { queue: [], doing: [], review: [], done: [] };
+    state.tasks.forEach(t => lanes[t.status].push(t));
+    lanes.done.sort((a, b) => b.since - a.since);
+    const LIMIT = 4;
+    for (const k in lanes) {
+      const arr = lanes[k];
+      $('c-' + k).textContent = arr.length;
+      const sig = arr.slice(0, LIMIT).map(t => t.id + (now() - t.fresh < 2500 ? 'n' : '')).join(',') + '|' + arr.length;
+      if (laneSig[k] === sig) continue;
+      laneSig[k] = sig;
+      $('l-' + k).innerHTML = arr.slice(0, LIMIT).map(t =>
+        `<div class="task ${now() - t.fresh < 2500 ? 'new' : ''}" style="${shown.has(t.id + k) ? 'animation:none' : ''}"><div class="task-title">${t.title}</div><div class="task-agent">${byId[t.agent].name}</div></div>`
+      ).join('') + (arr.length > LIMIT ? `<div class="more">+${arr.length - LIMIT} việc</div>` : '');
+      arr.slice(0, LIMIT).forEach(t => shown.add(t.id + k));
+    }
+    $('h-queue').textContent = lanes.queue.length;
+    if (state.campaign) {
+      const c = state.tasks.filter(t => t.campaign === state.campaign.id);
+      const d = c.filter(t => t.status === 'done').length;
+      $('campaign').textContent = `${state.campaign.name}: ${d}/${c.length} xong`;
+    }
+  }
+
+  function renderKpis() {
+    $('k-orders').textContent = fmt(state.orders);
+    $('k-rev').textContent = fmt(state.lots);
+    $('k-msg').textContent = fmt(state.cty);
+    $('k-done').textContent = fmt(state.done);
+    $('h-cost').textContent = state.cost.toLocaleString('vi-VN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' USD';
+  }
+
+  const spark = $('spark');
+  spark.innerHTML = `<defs><linearGradient id="sg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2ff59a" stop-opacity="0.35"/><stop offset="1" stop-color="#2ff59a" stop-opacity="0"/></linearGradient></defs>
+    ${[30, 65, 100].map(y => `<line x1="0" x2="300" y1="${y}" y2="${y}" stroke="#16302a" stroke-width="1"/>`).join('')}
+    <path id="sp-area" fill="url(#sg)"/><path id="sp-line" fill="none" stroke="#2ff59a" stroke-width="2.2" stroke-linejoin="round"/>
+    <circle id="sp-dot" r="4" fill="#fff"/>`;
+  function renderSpark() {
+    const s = state.series, n = s.length;
+    const xy = s.map((v, i) => [i * 300 / (n - 1), 120 - (v - 10) * 3]);
+    const d = xy.map((p, i) => (i ? 'L' : 'M') + p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join(' ');
+    $('sp-line').setAttribute('d', d);
+    $('sp-area').setAttribute('d', d + ' L300 130 L0 130 Z');
+    const last = xy[n - 1];
+    $('sp-dot').setAttribute('cx', last[0] - 3); $('sp-dot').setAttribute('cy', last[1]);
+    $('opm').textContent = Math.round(s[n - 1]) + ' ĐƠN';
+  }
+
+  const feed = $('feed');
+  function log(from, to, text) {
+    const div = document.createElement('div');
+    div.className = 'msg';
+    div.innerHTML = `<time>${hhmm()}</time><div><b>${byId[from].name}</b> → <b>${byId[to].name}</b>: ${text}</div>`;
+    feed.prepend(div);
+    while (feed.children.length > 14) feed.lastChild.remove();
+    state.cost += rand(0.001, 0.008);
+  }
+
+  function note(text) {
+    const div = document.createElement('div');
+    div.className = 'msg';
+    div.innerHTML = `<time>${hhmm()}</time><div style="color:var(--amber)">${text}</div>`;
+    feed.prepend(div);
+  }
+
+  function flash(id) {
+    const r = rowEls[id]; r.classList.add('flash'); setTimeout(() => r.classList.remove('flash'), 900);
+  }
+
+  // ---------- Đại trưởng lão ----------
+  function report(from, text, task = null) {
+    dtl.inbox.unshift({ id: dtl.nextId++, time: hhmm(), from, text, task, status: task ? 'pending' : 'info', at: now() });
+    dtl.inbox = dtl.inbox.filter((r, i) => i < 30 || r.status === 'pending' || r.status === 'reviewing');
+    dtl.reports++; dtl.ver++;
+  }
+  function order(to, text) {
+    dtl.orders.unshift({ id: dtl.nextId++, time: hhmm(), to, text, at: now() });
+    dtl.orders.length = Math.min(dtl.orders.length, 20);
+    dtl.assigned++; dtl.ver++;
+  }
+  function approve(r) {
+    if (!r || r.status === 'approved') return;
+    r.status = 'approved';
+    if (r.task && r.task.status === 'review') { r.task.status = 'done'; r.task.since = now(); state.done++; }
+    if (dtl.current === r) dtl.current = null;
+    dtl.approved++; dtl.ver++;
+    log('dtl', r.from, `đã duyệt "${r.task ? r.task.title : r.text}"`);
+    arc('dtl', r.from, 'Duyệt ✓');
+  }
+  // Đại trưởng lão duyệt lần lượt từng báo cáo, mỗi báo cáo mất ~1,6 giây
+  function dtlWork() {
+    const t = now();
+    if (dtl.current && t - dtl.current.startedAt > 1600) approve(dtl.current);
+    if (!dtl.current) {
+      const next = dtl.inbox.filter(r => r.status === 'pending' && t - r.at > 800).pop();
+      if (next) { next.status = 'reviewing'; next.startedAt = t; dtl.current = next; dtl.ver++; }
+    }
+  }
+  let dtlSig = '';
+  function renderDtl() {
+    const pending = dtl.inbox.filter(r => r.status === 'pending' || r.status === 'reviewing').length;
+    const cur = dtl.current;
+    $('dtl-now').innerHTML = cur
+      ? `Đang duyệt báo cáo của <b>${byId[cur.from].name}</b>: ${cur.task ? cur.task.title : cur.text}`
+      : pending ? `Có <b>${pending}</b> báo cáo đang chờ, chuẩn bị duyệt` : `Đang theo dõi ${AGENTS.length - 1} lão, chưa có báo cáo mới`;
+    $('ds-assigned').textContent = fmt(dtl.assigned);
+    $('ds-reports').textContent = fmt(dtl.reports);
+    $('ds-pending').textContent = pending;
+    $('ds-approved').textContent = fmt(dtl.approved);
+    if (dtlSig === String(dtl.ver)) return;
+    dtlSig = String(dtl.ver);
+    const label = { pending: 'Chờ duyệt', reviewing: 'Đang duyệt', approved: 'Đã duyệt', info: 'Đã nhận' };
+    $('dtl-inbox').innerHTML = dtl.inbox.slice(0, 7).map(r => `
+      <div class="dtl-item ${now() - r.at < 1500 ? 'fresh' : ''}">
+        <time>${r.time}</time>
+        <div class="txt" title="${byId[r.from].name}: ${r.text}"><b>${byId[r.from].name}</b>: ${r.text}</div>
+        ${r.status === 'pending' ? `<button class="approve" data-id="${r.id}">Duyệt</button>` : `<span class="badge ${r.status}">${label[r.status]}</span>`}
+      </div>`).join('');
+    $('dtl-orders').innerHTML = dtl.orders.slice(0, 7).map(o => `
+      <div class="dtl-item ${now() - o.at < 1500 ? 'fresh' : ''}" style="grid-template-columns:38px minmax(0,1fr)">
+        <time>${o.time}</time>
+        <div class="txt" title="${byId[o.to].name}: ${o.text}">→ <b>${byId[o.to].name}</b>: ${o.text}</div>
+      </div>`).join('');
+  }
+  $('dtl-inbox').addEventListener('click', e => {
+    const b = e.target.closest('.approve'); if (!b) return;
+    approve(dtl.inbox.find(r => r.id === +b.dataset.id));
+    renderDtl(); renderBoard(); renderAgents();
+  });
+
+  // ---------- Arcs ----------
+  function arc(from, to, label) {
+    const [x1, y1] = agentEls[from].head, [x2, y2] = agentEls[to].head;
+    const mx = (x1 + x2) / 2, my = Math.min(y1, y2) - 60 - Math.abs(x1 - x2) * 0.15;
+    const g = el('g', { class: 'arc-g' }, arcLayer);
+    const path = el('path', { d: `M${x1} ${y1} Q${mx} ${my} ${x2} ${y2}`, class: 'arc' }, g);
+    const dot = el('circle', { r: 4, fill: '#fff', filter: 'url(#glow)' }, g);
+    const len = path.getTotalLength();
+    const mid = path.getPointAtLength(len / 2);
+    const b = el('g', { class: 'bubble' }, g);
+    const w = label.length * 6.2 + 16;
+    el('rect', { x: mid.x - w / 2, y: mid.y - 11, width: w, height: 20, rx: 6 }, b);
+    const t = el('text', { x: mid.x, y: mid.y + 3, 'text-anchor': 'middle' }, b); t.textContent = label;
+    const start = performance.now(), D = 1400;
+    (function step(ts) {
+      const k = Math.min(1, (ts - start) / D);
+      const p = path.getPointAtLength(len * k);
+      dot.setAttribute('cx', p.x); dot.setAttribute('cy', p.y);
+      if (k < 1) requestAnimationFrame(step);
+      else { flash(to); setTimeout(() => { g.style.opacity = 0; setTimeout(() => g.remove(), 500); }, 900); }
+    })(start);
+  }
+
+  // ---------- Simulation ----------
+  function tick() {
+    const t = now();
+    for (const task of state.tasks) {
+      if (task.status === 'queue') {
+        const busy = state.tasks.some(x => x.agent === task.agent && x.status === 'doing');
+        if (!busy && t - task.since > 1200) { task.status = 'doing'; task.since = t; }
+      } else if (task.status === 'doing' && t - task.since > task.dur) {
+        task.status = 'review'; task.since = t;
+        log(task.agent, 'dtl', `xong "${task.title}", nhờ duyệt`);
+        arc(task.agent, 'dtl', 'Báo cáo');
+        report(task.agent, `Xong "${task.title}"`, task);
+      }
+    }
+    dtlWork();
+    // trim old done tasks
+    const done = state.tasks.filter(x => x.status === 'done').sort((a, b) => b.since - a.since);
+    if (done.length > 12) {
+      const drop = new Set(done.slice(12).filter(x => !state.campaign || x.campaign !== state.campaign.id).map(x => x.id));
+      state.tasks = state.tasks.filter(x => !drop.has(x.id));
+    }
+    renderBoard(); renderAgents(); renderKpis(); renderDtl();
+  }
+
+  function ambient() {
+    const [f, to, text, label] = pick(AMBIENT);
+    log(f, to, text); arc(f, to, label);
+    if (to === 'dtl') report(f, text);
+    if (f === 'l8' || f === 'l9') state.cty++;
+    if (to === 'l2' || f === 'l2') state.lots += Math.random() < 0.4 ? 1 : 0;
+  }
+
+  function routine() {
+    if (state.tasks.filter(t => t.status !== 'done').length > 14) return;
+    const [title, agent] = pick(ROUTINE);
+    if (state.tasks.some(t => t.agent === agent && t.status !== 'done')) return;
+    addTask(title, agent);
+    order(agent, `${title} (định kỳ)`);
+  }
+
+  function metrics() {
+    const last = state.series[state.series.length - 1];
+    const next = Math.max(14, Math.min(42, last + rand(-3.5, 3.8)));
+    state.series.push(next); state.series.shift();
+    state.orders += Math.random() < 0.6 ? Math.ceil(next / 15) : 0;
+    renderSpark(); renderKpis();
+  }
+
+  // ---------- Command ----------
+  const form = $('cmd-form'), input = $('cmd-input'), btn = $('cmd-btn');
+  function dispatch(cmd) {
+    cmd = cmd.trim(); if (!cmd) return;
+    const plan = PLANS.find(p => p.re.test(cmd));
+    const tasks = plan ? plan.tasks : FALLBACK;
+    const cid = 'c' + now();
+    let short = cmd.replace(/^(lên|làm|tạo)?\s*(chiến dịch|kế hoạch)?\s*/i, '').replace(/\s+cho shop$/i, '') || cmd;
+    if (short.length > 26) short = short.slice(0, 26) + '…';
+    const name = 'Chiến dịch ' + short;
+    state.campaign = { id: cid, name };
+    note(`Đại trưởng lão nhận lệnh "${cmd}" → chia cho ${tasks.length} lão`);
+    tasks.forEach(([title, agent], i) => {
+      setTimeout(() => {
+        addTask(title, agent, 'queue', cid);
+        log('dtl', agent, `việc mới: ${title.toLowerCase()}`);
+        order(agent, title);
+        renderDtl();
+        arc('dtl', agent, 'Việc mới');
+        renderBoard();
+      }, 250 + i * 320);
+    });
+    if (tasks.some(t => t[1] === 'l2') && tasks.some(t => t[1] === 'l3')) {
+      setTimeout(() => { log('l2', 'l3', 'gửi danh sách mã cần soát giá vốn'); arc('l2', 'l3', 'Gửi số liệu'); }, 400 + tasks.length * 320);
+    }
+    btn.textContent = `✓ Đã chia cho ${tasks.length} lão`;
+    setTimeout(() => { btn.textContent = 'Giao việc ↵'; }, 3500);
+  }
+  form.addEventListener('submit', e => { e.preventDefault(); dispatch(input.value); });
+  document.querySelectorAll('.chip').forEach(c => c.addEventListener('click', () => { input.value = c.textContent; dispatch(c.textContent); }));
+
+  // ---------- Clock & loops ----------
+  $('h-running').textContent = `${AGENTS.length}/${AGENTS.length}`;
+  $('online-count').textContent = `${AGENTS.length}/${AGENTS.length} online`;
+  const clock = () => { $('h-clock').textContent = new Date().toTimeString().slice(0, 8); };
+  clock(); setInterval(clock, 1000);
+  for (let i = 0; i < 6; i++) { const [f, to, text] = AMBIENT[i]; log(f, to, text); }
+  for (const tk of state.tasks.filter(x => x.status === 'review')) report(tk.agent, `Xong "${tk.title}"`, tk);
+  report('l20', 'đã tạo TK chấm công cho 2 NV');
+  report('l9', 'đã tạo 6 đơn sapo Cty');
+  for (const tk of state.tasks.filter(x => x.status !== 'review')) order(tk.agent, tk.title);
+  for (const r of dtl.inbox) r.at = 0;
+  for (const o of dtl.orders) o.at = 0;
+  Object.assign(dtl, { assigned: 142, reports: 131, approved: 118 });
+  renderSpark(); tick();
+  setInterval(tick, 1000);
+  setInterval(ambient, 2600);
+  setInterval(routine, 4500);
+  setInterval(metrics, 2000);
+  setTimeout(ambient, 600);
+})();
+</script>
+</body>
+</html>
